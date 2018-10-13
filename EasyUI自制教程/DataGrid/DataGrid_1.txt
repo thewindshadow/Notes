@@ -1,0 +1,74 @@
+$(function () {
+    $("#box").datagrid({
+        //设置请求路径
+        url:"#",
+        //设置表格宽度
+        width: 500,
+        //设置请求方式
+        type: "GET",
+        //设置表头图标
+        iconCls:"icon-search",
+        //设置表头标题
+        title:"EasyUI数据表格",
+        //设置是否显示行号
+        rownumbers:true,
+        //设置是否分页
+        pagination:true,
+        //设置分页时初始化页数
+        pageNumber:1,
+        //设置每页显示的条数
+        pageSize:5,
+        //设置显示条数的下拉列表
+        pageList:[5,10,20],
+        //设置分页导航的位置
+        pagePosition:"bottom",
+        //设置列适应
+        fitColumns : true,
+        //设置表格中的列
+        columns: [[
+            {
+                //每一列的名字
+                title: "用户名",
+                //数据中的字段名（数据库中的字段名）
+                field: "user",
+                //每一列的宽度
+                width: 100
+            }, {
+                title: "邮箱",
+                field: "email",
+                width: 100
+            },{
+                title:"日期",
+                field:"date",
+                width:100
+            }
+        ]],
+        data:[
+            {
+                user:"贾宝玉",
+                email:"jiabaoyu@qq.com",
+                date:"1996-01-01"
+            },{
+                user:"林黛玉",
+                email:"lindaiyu@qq.com",
+                date:"1996-01-02"
+            },{
+                user:"薛宝钗",
+                email:"xuebaochai@qq.com",
+                date:"1996-01-03"
+            },{
+                user:"贾惜春",
+                email:"jiaxichun@qq.com",
+                date:"1996-01-04"
+            },{
+                user:"袭人",
+                email:"xiren@qq.com",
+                date:"1996-01-05"
+            },{
+                user:"贾迎春",
+                email:"jiayingchun@qq.com",
+                date:"1996-01-06"
+            }
+        ]
+    });
+});
