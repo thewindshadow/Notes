@@ -140,3 +140,32 @@ Enter file in which to save the key (/Users/your_user_directory/.ssh/id_rsa):
 
 Hi ooyhao! You’ve successfully authenticated, but GitHub does not provide shell access. 
 
+##### 4.报fatal: remote origin already exists.
+
+~~~xml
+Administrator@ooyhao MINGW64 /d/SourceCode/京东/JD_SSM (master)
+$ git remote add origin git@gitee.com:ooyhao/JD_SSM.git
+fatal: remote origin already exists.
+~~~
+
+
+
+最后找到解决办法如下：
+1、先删除远程 Git 仓库
+
+    $ git remote rm origin
+
+2、再添加远程 Git 仓库
+
+    $ git remote add origin git@github.com:FBing/java-code-generator
+
+如果执行 git remote rm origin 报错的话，我们可以手动修改gitconfig文件的内容
+
+    $ vi .git/config
+
+这里写图片描述
+
+![](./img/gitException2.jpg)
+
+把 [remote “origin”] 那一行删掉就好了
+
