@@ -1,5 +1,289 @@
 ## SQL笔记
 
+### 基本SQL操作
+
+#### 1.操作数据库
+
+```sql
+-- 查询数据库
+show databases;
+-- 创建数据库
+create database newDatabase;
+-- 删除数据库
+drop database newDatabase;
+```
+
+#### 2.操作数据表
+
+```SQL
+-- 选择指定数据库
+use testDB;	
+-- 查询当前数据库下的全部数据表
+show tables;
+-- 创建表
+create table tb_user(
+	id int(11) not null auto_increment primary key,
+	name varchar(255) not null,
+	age int(11)
+);
+-- 创建表，存在则不会创建
+create table if not exists tb_user2(
+	id int(11) not null auto_increment primary key,
+	name varchar(255) not null,
+	age int(11)
+);
+
+-- 使用旧表创建新表(只复制表的结构，不复制表的数据)
+create table newTable like tb_user;
+-- 使用旧表（部分列）创建新的表(既复制表的结构又复制表的数据)
+create table newTables as select id,name,age,matching from tb_user;
+-- 使用就表创建新表（全部列，既复制表的结构又复制表的数据）
+create table newTable1 as select * from tb_user;
+
+-- 查询表的结构
+desc testAlter;
+show columns from testAlter;
+
+-- 将A表的查询结果插入到B表中。
+insert into tb_new_user select * from tb_user;
+
+-- 清除表中的数据
+-- 注意：删除表的所有行，但表的结构、列、约束、索引等不会被删除；不能用于有外建约束引用的表
+truncate table tb_new_user;
+
+-- 删除表如果存在
+drop table if exists tb_new_user2;
+
+-- 对数据表的列进行操作
+-- 对表的重命名
+alter table tb_user1 rename [TO] tb_new_user1;
+
+-- 增加列
+alter table tb_user add new_column varchar(255) comment '这是新增列';
+alter table tb_user add column new_column varchar(255) comment '这是新增列';
+alter table tb_user add column new_column varchar(255) not null comment '这是新增的非空列';
+alter table tb_user add column new_column int(11) not null default 0 comment '这是新增非空默认为0的列';
+
+-- 删除列
+alter table tb_user drop column newColumn;
+alter table tb_user drop newColumn;
+
+-- 修改列
+alter table tb_user change column new_column newColumn varchar(256) not null ;
+alter table tb_user change column new_column newColumn int(11) not null default 0 comment '修改列名';
+
+```
+
+#### 3.select语句
+
+##### 1.普通查询
+
+```SQL
+-- 查询整张表的所有列
+select * from tb_user;
+
+-- 查询指定列
+select id, name from tb_user;
+```
+
+##### 2.distinct
+
+```SQL
+-- 使用 distinict语句 (获得不同的值)（查询结果的所有列与别的记录）
+select distinct name,age from tb_user;
+select distinct name from tb_user;
+```
+
+##### 3.where
+
+```SQL
+-- where 子句  筛选
+select * from tb_user where id = 1;
+```
+
+##### 4.order by 
+
+```SQL
+-- 按id降序
+select * from tb_user order by id desc;
+-- 按id升序
+select * from tb_user order by id asc;
+-- 多条件排序
+select * from tb_user order by name,age asc;
+```
+
+##### 5.and , or 
+
+```SQL
+-- and 子句
+select * from tb_user where name = 'yanghao' and age = 21;
+-- or 子句
+select * from tb_user where name = 'yanghao1' or age = 21;
+```
+
+##### 6.like
+
+```SQL
+-- like 子句 模糊查询
+select * from tb_user where name like '%hao';
+select * from tb_user where name like 'yang%';
+select * from tb_user where name like '%yang%';
+
+-- ％ - 百分号表示零个，一个或多个字符
+-- _ - 下划线表示单个字符
+select * from tb_user where name like 'yanghao_';
+```
+
+##### 7.between and
+
+```SQL
+-- BETWEEN运算符是包含性的：包括开始和结束值。
+-- between and
+select * from tb_user where id between 1 and 2;
+select * from tb_user where id not between 1 and 2;
+```
+
+##### 8.null
+
+```SQL
+-- is null ，is not null 
+select * from tb_user where matching is null;
+select * from tb_user where matching is not null;
+```
+
+##### 9.limit
+
+```SQL
+-- limit 
+select * from tb_user limit 2;
+-- 去下标为1的开始，2条。注意与between and 进行区分
+select * from tb_user limit 1,2;
+```
+
+##### 10.in
+
+```SQL
+--  IN 运算符
+select * from tb_user where id in (1,2,3);
+select * from tb_user where name in ('yanghao', 'lisi');
+
+-- 利用子查询的结果作为in的元素
+SELECT
+	* 
+FROM
+	tb_user 
+WHERE
+	NAME IN ( SELECT NAME FROM tb_user WHERE id IN ( 2, 3 ) );
+	
+select * from tb_user;
+```
+
+##### 11.case 
+
+```SQL
+-- switch（case） 语句 
+SELECT
+	id,
+	NAME,
+	age,
+	(CASE matching WHEN 0 THEN '零' WHEN 1 THEN '壹' WHEN 2 THEN '贰' end)  AS number
+FROM
+	tb_user;
+```
+
+##### 12.if
+
+```SQL
+select if(true,'yes','no') as status;
+
+-- if 函数
+select id,name,age,matching , if(sex = 'w','女','男') as '姓别' from tb_user;
+```
+
+##### 12.group by
+
+```SQL
+-- group by
+select sex, count(sex) count from tb_user group by sex;
+select name, count(*) count from tb_user group by name;
+
+select name,age,count(*) count from tb_user group by name,age;
+```
+
+##### 13.union
+
+```SQL
+-- 并集，将多个结果连接起来
+select * from tb_user where name like '%hao%'
+union
+select * from tb_user where age = 18;
+```
+
+
+
+#### 4.insert语句
+
+```SQL
+-- insert插入语句
+-- (两种，一种是插入全部字段，则可以简化为如下)
+insert into tb_user values(6,'zhangsan',18,1,1);
+insert into tb_user (name,age,matching, newColumn) values( 'zhangsan',20,1,1);
+```
+
+#### 5.update语句
+
+```SQL
+-- update 更新语句
+update  tb_user set name = 'lisi' where id = 4;
+```
+
+#### 6.delete语句
+
+```SQL
+-- delete 删除语句
+delete from tb_user where id = 5;
+```
+
+#### 7.函数
+
+```SQL
+-- 个数
+select count(*) as totalCount from tb_user;
+-- 总和
+select sum(age) as totalAge from tb_user;
+-- 平均值
+select avg(age) as avgAge from tb_user;
+-- 最大
+select max(age) as maxAge from tb_user;
+-- 最小
+select min(age) as minAge from tb_user;
+```
+
+#### 8.事务
+
+```SQL
+create table runoob_transaction_test ( id int(5)) engine = innodb; # 创建数据库
+
+select * from runoob_transaction_test;
+
+begin;
+insert into runoob_transaction_test (id) values (5);
+
+insert into runoob_transaction_test (id) values (6);
+
+commit;
+
+select * from runoob_transaction_test;
+
+begin;
+insert into runoob_transaction_test (id) values (7);
+rollback;
+select * from runoob_transaction_test;
+commit;
+```
+
+
+
 ### SQL 连接(JOIN)
 
 ```
