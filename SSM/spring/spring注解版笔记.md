@@ -1128,4 +1128,285 @@ Object bean = applicationContext.getBean("&colorFactoryBean");
 
 
 
-### 
+## 7.@Bean bean的声明周期
+
+~~~java
+/**
+ * bean的生命周期：
+ * 		bean创建---初始化----销毁的过程
+ * 容器管理bean的生命周期；
+ * 我们可以自定义初始化和销毁方法；容器在bean进行到当前生命周期的时候来调用我们自定义的初始化和销毁方法
+ * 
+ * 构造（对象创建）
+ * 		单实例：在容器启动的时候创建对象
+ * 		多实例：在每次获取的时候创建对象
+ * 
+ * BeanPostProcessor.postProcessBeforeInitialization
+ * 初始化：
+ * 		对象创建完成，并赋值好，调用初始化方法。。。
+ * BeanPostProcessor.postProcessAfterInitialization
+ * 销毁：
+ * 		单实例：容器关闭的时候
+ * 		多实例：容器不会管理这个bean；容器不会调用销毁方法；
+ * 
+ * 
+ * 遍历得到容器中所有的BeanPostProcessor；挨个执行beforeInitialization，
+ * 一但返回null，跳出for循环，不会执行后面的BeanPostProcessor.postProcessorsBeforeInitialization
+ * 
+ * BeanPostProcessor原理
+ * populateBean(beanName, mbd, instanceWrapper);给bean进行属性赋值
+ * initializeBean
+ * {
+ * 		applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
+ * 		invokeInitMethods(beanName, wrappedBean, mbd);执行自定义初始化
+ * 		applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
+ *}
+ * 
+ * 
+ * 
+ * 1）、指定初始化和销毁方法；
+ * 		通过@Bean指定init-method和destroy-method；
+ * 2）、通过让Bean实现InitializingBean（定义初始化逻辑），
+ * 				DisposableBean（定义销毁逻辑）;
+ * 3）、可以使用JSR250；
+ * 		@PostConstruct：在bean创建完成并且属性赋值完成；来执行初始化方法
+ * 		@PreDestroy：在容器销毁bean之前通知我们进行清理工作
+ * 4）、BeanPostProcessor【interface】：bean的后置处理器；
+ * 		在bean初始化前后进行一些处理工作；
+ * 		postProcessBeforeInitialization:在初始化之前工作
+ * 		postProcessAfterInitialization:在初始化之后工作
+ * 
+ * Spring底层对 BeanPostProcessor 的使用；
+ * 		bean赋值，注入其他组件，@Autowired，生命周期注解功能，@Async,xxx BeanPostProcessor;
+ * 
+ *
+ *
+ */
+~~~
+
+### 一，通过指定初始化和销毁方法。
+
+#### 1.在一个需要声明为Bean的类中自定义一个初始化和一个销毁方法。
+
+~~~java
+
+public class Car {
+
+    public Car(){
+        System.out.println("car construct...");
+    }
+
+    public void init(){
+        System.out.println("car init...");
+    }
+
+    public void destroy(){
+        System.out.println("car destroy...");
+    }
+}
+~~~
+
+#### 2.在主配置类中使用@Bean注解注册一个Bean实例，并通过initMethod属性和destroyMethod方法指定其初始化方法和销毁方法。
+
+~~~java
+@Configuration
+public class MainConfig {
+
+    @Scope("singleton")
+    @Bean(initMethod = "init",destroyMethod = "destroy")
+    public Car car(){
+        return new Car();
+    }
+}
+~~~
+
+**此时@Scope设置为singleton**
+
+结果：
+
+![](image/@BeanSingleton.png)
+
+**将@Scope设置为prototype**
+
+测试文件如下：
+
+~~~java
+@Test
+public void testImport(){
+
+    AnnotationConfigApplicationContext context =
+            new AnnotationConfigApplicationContext(MainConfig.class);
+    String[] names = context.getBeanDefinitionNames();
+    for(String name: names){
+        System.out.println(name);
+    }
+    //-------prototype新增的一句获取语句-------
+    Object bean = context.getBean("car");
+    context.close();
+}
+~~~
+
+结果：
+
+![](image/@BeanPrototypr.png)
+
+
+
+#### 3.总结：
+
+~~~xml
+	如果使用的是通过自己指定初始化方法和销毁方法的话，那么我们需要在该类中自己定义相应的两个方法，在主配置类中通过@Bean注解进行注册到ioc容器中。同时通过@Bean注解的initMethod属性和destroyMethod属性分别对初始化方法和销毁方法进行指定。例如：
+	@Scope("prototype")
+    @Bean(initMethod = "init",destroyMethod = "destroy")
+    public Car car(){
+        return new Car();
+    }
+并且可以看出，单例模式下，ioc容器创建时就会创建bean放入其中。并能控制其生命周期，即可以控制bean的创建，				初始化，和销毁方法。
+			多例模式下，ioc容器创建时不会创建bean instancec.只有当调用它的时候，才会进行创建和初始				化。
+由上面两图可以看出。
+~~~
+
+### 二，通过让Bean实现InitializingBean（定义初始化逻辑），DisposableBean（定义销毁逻辑）;
+
+#### 1.cat类如下：
+
+~~~java
+@Component
+public class Cat implements InitializingBean,DisposableBean {
+
+    public Cat(){
+        System.out.println("cat construct...");
+    }
+
+    public void afterPropertiesSet() throws Exception {
+        System.out.println("cat afterPropertiesSet...");
+    }
+
+    public void destroy() throws Exception {
+        System.out.println("cat destroy...");
+    }
+}
+~~~
+
+#### 2.MainConfig.java主配置类
+
+~~~java
+@Configuration
+@ComponentScan("com.ooyhao") //通过宝扫描的方式
+public class MainConfig {
+}
+~~~
+
+#### 3.结果
+
+![](C:\Users\5161\AppData\Local\Temp\1540546258730.png)
+
+#### 4.总结：
+
+~~~xml
+	通过让Bean实现InitializingBean与DisposableBean两个接口，并重写其未实现的方法。然后将这个组件注册到ioc容器中去，当bean初始化和销毁的时机到了，就会调用这两个接口中的两个方法，进行初始化和销毁。
+~~~
+
+
+
+
+
+### 三.使用JSR250中@PostConstruct和@PreDestroy注解指定创建销毁
+
+
+
+~~~xml
+@PostConstruct：在bean创建完成并且属性赋值完成；来执行初始化方法
+@PreDestroy：在容器销毁bean之前通知我们进行清理工作
+~~~
+
+Dog.java Bean
+
+~~~java
+@Component
+public class Dog  {
+
+    public Dog(){
+        System.out.println("Dog construct...");
+    }
+    @PostConstruct
+    public void init(){
+        System.out.println("Dog @PostConstruct...");
+    }
+    @PreDestroy
+    public void destroy(){
+        System.out.println("Dog @PreDestroy...");
+    }
+
+}
+
+~~~
+
+使用@ComponentScan进行包扫描，
+
+结果：
+
+![](image/Dog.png)
+
+总结：
+
+~~~xml
+由上图可以知道，使用@PostConstrut和@PreDestroy注解，也可以实现指定方法作为bean的初始化和销毁方法。
+使用JSR250；
+     @PostConstruct：在bean创建完成并且属性赋值完成；来执行初始化方法
+     @PreDestroy：在容器销毁bean之前通知我们进行清理工作
+~~~
+
+
+
+### 四，通过实现BeanPostProcessor接口
+
+**MyBeanPostProcessor.java**
+
+~~~java
+@Component
+public class MyBeanPostProcessor implements BeanPostProcessor {
+
+    public MyBeanPostProcessor(){
+        System.out.println("MyBeanPostProcessor construct...");
+    }
+
+    //初始化之前
+    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+        System.out.println("postProcessBeforeInitialization ... "+beanName+"-->"+bean);
+        return bean;
+    }
+
+    //初始化之后
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        System.out.println("postProcessAfterInitialization ... "+beanName+"-->"+bean);
+        return bean;
+    }
+
+}
+
+~~~
+
+**结果：**
+
+![](image/MyBeanPostProcessor.png)
+
+
+
+**总结：**
+
+~~~xml
+BeanPostProcessor【interface】：bean的后置处理器；
+ * 		在bean初始化前后进行一些处理工作；
+ * 		postProcessBeforeInitialization:在初始化之前工作
+ * 		postProcessAfterInitialization:在初始化之后工作
+
+这个接口并不是控制自身的生命周期，而是通过这个bean实现这个接口后，所有bean在初始化之前都会调用postProcessBeforesInitialization方法，而bean初始化完成之后会执行postProcessAfterInitialization方法 
+~~~
+
+
+
+
+
+
+

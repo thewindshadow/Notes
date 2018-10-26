@@ -28,11 +28,11 @@
 ~~~xml
 -GET 	/product:列出所有商品
 -POST 	/product:新建一个商品
--GET  	/product/ID:获得某个指定商品的信息
--PUT  	/product/ID:更新某个指定商品的信息
--DELETE /product/ID:删除某个商品
--GET 	/product/ID/purchase:列出某个指定商品的所有投资者
--GET 	/product/ID/purchase/ID:获得某个指定商品的指定投信息
+-GET  	/product/{id}:获得某个指定商品的信息
+-PUT  	/product/{id}:更新某个指定商品的信息
+-DELETE /product/{id}:删除某个商品
+-GET 	/product/{id}/purchase:列出某个指定商品的所有投资者
+-GET 	/product/{id}/purchase/{pid}:获得某个指定商品的指定投信息
 ~~~
 
 ### 测试
