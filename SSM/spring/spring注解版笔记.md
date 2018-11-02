@@ -1,4 +1,4 @@
-# Spring
+#  Spring
 
 ## 1.@Configuration&@Bean
 
@@ -1404,9 +1404,546 @@ BeanPostProcessor【interface】：bean的后置处理器；
 这个接口并不是控制自身的生命周期，而是通过这个bean实现这个接口后，所有bean在初始化之前都会调用postProcessBeforesInitialization方法，而bean初始化完成之后会执行postProcessAfterInitialization方法 
 ~~~
 
+## 8.@Value&@PropertySource
+
+### @value的源码：
+
+~~~java
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.ANNOTATION_TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface Value {
+    String value();
+}
+~~~
 
 
 
+### Person.java
+
+~~~java
+public class Person implements Serializable {
+
+
+    //可以使用@Value注解
+    /**
+     * 1.可以使用基本数值
+     * 2.可以使用SpEL表达，#{}
+     * 3.可以写${},取出配置文件中的值。（在运行环境变量里面取）
+     */
+    @Value("张三")
+    private String name;
+
+    @Value("#{20 - 2}")
+    private Integer age;
+
+    @Value("${person.nickName}")
+    private String nickName;
+
+   //省getter/setter/toString
+}
+
+~~~
+
+### properties文件
+
+~~~properties
+person.nickName=小张三
+~~~
+
+### 配置类：
+
+~~~java
+@Configuration
+//使用PropertySource读取外部配置文件中的k/v保存到运行环境中。加载完外部配置文件以后使用${}取出配置文件中的值
+@PropertySource(value = {"classpath:/person.properties"})
+public class MainConfigOfPropertyValues {
+
+    @Bean
+    public Person person(){
+        return new Person();
+    }
+}
+~~~
+
+以上使用@PerpertySource引入配置文件，相当于之前在xml文件中写的如下一句
+
+~~~xml
+<!--引入配置文件-->
+<context:property-placeholder location="classpath:person.properties">
+</context:property-placeholder>
+~~~
+
+
+
+### 测试类：
+
+~~~java
+@Test
+public void test(){
+    printBean();
+    Person person = (Person) applicationContext.getBean("person");
+    System.out.println(person);
+
+    ConfigurableEnvironment environment = applicationContext.getEnvironment();
+    String property = environment.getProperty("person.nickName");
+    System.out.println(property);
+}
+~~~
+
+### 结果：
+
+![](image/@Value.png)
+
+### 总结：
+
+~~~java
+可以看出，其实配置文件中的信息是被加载到环境变量中去了，从而可以使用environment.getProperty("person.nickName")获取到
+而使用@Value注解可以使用以下三种方式进行取值：
+	//可以使用@Value注解
+    /**
+     * 1.可以使用基本数值
+     * 2.可以使用SpEL表达，#{}
+     * 3.可以写${},取出配置文件中的值。（在运行环境变量里面取）
+     */
+~~~
+
+## 9.@Autowired和@Primary和@Qualifier（spring）
+
+BookDao.java
+
+~~~java
+@Repository
+public class BookDao {
+
+    private String lable = "2";
+
+    public String getLable() {
+        return lable;
+    }
+
+    public void setLable(String lable) {
+        this.lable = lable;
+    }
+
+    @Override
+    public String toString() {
+        return "BookDao{" +
+                "lable='" + lable + '\'' +
+                '}';
+    }
+}
+
+~~~
+
+BookService.java
+
+```java
+@Service
+public class BookService {
+
+
+    @Qualifier("bookDao")
+    @Autowired
+    private BookDao bookDao;
+
+    public BookDao getBookDao() {
+        return bookDao;
+    }
+
+    public void setBookDao(BookDao bookDao) {
+        this.bookDao = bookDao;
+    }
+
+}
+```
+
+Config.java类
+
+~~~java
+@Configuration
+@ComponentScan(basePackages = {"com.ooyhao.service","com.ooyhao.controller","com.ooyhao.dao"})
+public class MainConfigOfAutowired {
+//    @Primary
+    @Bean
+    public BookDao bookDao(){
+        BookDao bookDao = new BookDao();
+        bookDao.setLable("1");
+        return bookDao;
+    }
+}
+
+~~~
+
+测试类
+
+~~~java
+@Test
+public void testAutowired(){
+    BookService bookService = (BookService) applicationContext.getBean(BookService.class);
+    System.out.println("注入："+bookService.getBookDao());
+    BookDao bookDao = (BookDao) applicationContext.getBean(BookDao.class);
+    System.out.println("ioc容器取出:"+bookDao);
+    applicationContext.close();
+}
+~~~
+
+#### **Attention：**
+
+注意：在我自己测试的时候，发现使用@Bean注入和@Repository注册Bean的时候。即使是同一个类型又是同一个名字，但是没有报错。
+
+~~~java
+@Service
+public class BookService {
+    @Autowired
+    private BookDao bookDao;
+
+    public BookDao getBookDao() {
+        return bookDao;
+    }
+
+    public void setBookDao(BookDao bookDao) {
+        this.bookDao = bookDao;
+    }
+}
+
+
+@Configuration
+@ComponentScan(basePackages = {"com.ooyhao.service","com.ooyhao.controller","com.ooyhao.dao"})
+public class MainConfigOfAutowired {
+    @Bean
+    public BookDao bookDao1(){
+        BookDao bookDao = new BookDao();
+        bookDao.setLable("1");
+        return bookDao;
+    }
+}
+~~~
+
+
+
+而当我上面这样写的时候，却抛出了一个异常，并没有测试出总结处解释的那样的结果，表示很无解：
+
+~~~xml
+org.springframework.context.annotation.AnnotationConfigApplicationContext prepareRefresh
+信息: Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@2ff5659e: startup date [Sat Oct 27 17:51:07 CST 2018]; root of context hierarchy
+注入：BookDao{lable='2'}
+
+org.springframework.beans.factory.NoUniqueBeanDefinitionException: No qualifying bean of type 'com.ooyhao.dao.BookDao' available: expected single matching bean but found 2: bookDao,bookDao1
+
+
+~~~
+
+#### **总结：**
+
+~~~java
+/**
+ * 自动装配：
+ *      Spring利用依赖注入（DI），完成IOC容器中各个组件的依赖关系赋值。
+ *
+ * 1) Autowired: 自动注入
+ *      1，默认是按照类型去容器中找对应的组件：applicationContext.getBean(BookDao.class);
+ *      2. 如果找到多个相同类型的组件，再将属性的名称作为组件的id去容器中查找 applicationContext.getBean("bookDao");
+ *      3.@Qualifier("bookDao"):使用@Qualifier指定需要装配的组件的id，而不是使用属性名
+ *      4.自动装配默认一定要将属性赋值好，没有就会报错。可以使用@Autowired(required=false)；
+ *      5.@Primary：让Spring进行自动装配的时候，默认使用首选的Bean，也可以继续使用@Qualifier指定装配的Bean的名字。
+ *
+ */
+~~~
+
+扩展：
+
+~~~java
+public Boss(@Autowired Car car){
+        System.out.println("boss 有参构造器");
+        System.out.println(car);
+        this.car = car;
+    }
+
+@Autowired
+public void setCar(Car car) {
+
+    this.car = car;
+}
+~~~
+
+
+
+
+
+~~~java
+3) @Autowired：构造器，参数，方法，属性、
+ *      1.标注在方法位置：@Bean+方法参数，参数从容器中获取，默认不写@Autowired效果是一样的。都能自动装配。
+ 	@Bean
+    public Color color(@Autowired Car car){
+        return new Color();
+    }
+ *      2.标注在构造器位置 如果组件只有一个有参数的构造器，这个有参构造器的@Autowired可以省略，参数位置的组件还是可以从容器中获取的。
+ *      3.标注在参数的位置  public Boss(@Autowired Car car){} / public void setCar(@Autowired Car car) {}
+ *      4.标注在属性位置
+~~~
+
+
+
+
+
+## 10.@Resource（JSR250）和@Inject（JSR330）（java）
+
+
+
+还是一样，并没有测试出总结出说的那样的效果。
+
+总结：
+
+~~~java
+ 	  @Resource:
+ *      可以和@Autowired一样实现自动装配功能，默认是按照组建名称进行装配的，
+ *      没有能支持@Primary功能没有支持@Autowired(required=false);
+ *    @Inject: 需要导入javax.inject的包，和Autowired功能一样，但是没有required=false的功能;
+~~~
+
+## 11，Aware注入Spring底层组件
+
+**Aware接口的实现图：**
+
+![](image/Aware.png)
+
+通过实现相应的接口，可以把Spring底层的组件注入到自定义bean中。
+
+~~~java
+@Component
+public class Red implements ApplicationContextAware,BeanNameAware,EmbeddedValueResolverAware{
+
+    private ApplicationContext applicationContext;
+
+    private String name;
+
+    private StringValueResolver stringValueResolver;
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+        System.out.println("传入的ioc容器："+applicationContext);
+    }
+
+
+    @Override
+    public void setBeanName(String name) {
+        this.name = name;
+        System.out.println("当前Bean的名字："+name);
+    }
+
+    @Override
+    public void setEmbeddedValueResolver(StringValueResolver stringValueResolver) {
+        this.stringValueResolver = stringValueResolver;
+        String stringValue = stringValueResolver.resolveStringValue("你好${os.name}, 我是#{20*18}");
+        System.out.println("stringValueResolver:"+stringValue);
+    }
+}
+
+~~~
+
+结果：
+
+![](image/AwareResult.png)
+
+总结：
+
+~~~xml
+ 自定义组件想要使用spring容器底层的一些组件，（ApplicationContext,BeanFactory,XXX）
+ *      自定义组件实现XxxAware,在创建对象的时候，会调用接口规定的方法注入相关的组件。
+ *     把Spring底层一些组件注入到自定义Bean中
+ *      xxxAware:功能使用xxxProcessor。
+ *          ApplicationContextAware==>ApplicationContextAwareProcessor。
+~~~
+
+
+
+## 12基于注解版的AOP
+
+Aop术语：
+
+```xml
+AOP常用术语：
+连接点(Joinpoint)
+  增强程序执行的某个特定位置(要在哪个地方做增强操作)。Spring仅支持方法的连接点，既仅能在方法调用前，方法调用后，方法抛出异常时等这些程序执行点进行织入增强。
+
+切点（Pointcut）
+  切点是一组连接点的集合。AOP通过“切点”定位特定的连接点。通过数据库查询的概念来理解切点和连接点的关系再适合不过了：连接点相当于数据库中的记录，而切点相当于查询条件。
+
+增强（Advice）
+  增强是织入到目标类连接点上的一段程序代码。表示要在连接点上做的操作。
+
+切面（Aspect）
+  切面由切点和增强（引介）组成(可以包含多个切点和多个增强)，它既包括了横切逻辑的定义，也包括了连接点的定义，SpringAOP就是负责实施切面的框架，它将切面所定义的横切逻辑织入到切面所指定的链接点中。
+```
+
+
+
+通知的五种类型：
+
+```xml
+spring aop通知(advice)分成五类： 
+前置通知[Before advice]：在连接点前面执行，前置通知不会影响连接点的执行，除非此处抛出异常。 
+
+正常返回通知[After returning advice]：在连接点正常执行完成后执行，如果连接点抛出异常，则不会执行。 
+
+异常返回通知[After throwing advice]：在连接点抛出异常后执行。 
+
+返回通知[After (finally) advice]：在连接点执行完成后执行，不管是正常执行完成，还是抛出异常，都会执行返回通知中的内容。 
+
+环绕通知[Around advice]：环绕通知围绕在连接点前后，比如一个方法调用的前后。这是最强大的通知类型，能在方法调用前后自定义一些操作。
+
+环绕通知还需要负责决定是继续处理join point(调用ProceedingJoinPoint的proceed方法)还是中断执行。
+```
+
+可以参考[博客](https://www.cnblogs.com/programmer1/p/7994031.html)
+
+```xml
+常用的@AspectJ形式Pointcut表达式的标志符：
+execution：
+  Spring AOP仅支持方法执行类型的Joinpoint 所以execution将会是我们用的最多的标志符，用它来帮我们匹配拥有指定方法前面的Joinpoint。匹配规则如下：
+execution(modifiers-pattern? return-type-pattern declaring-type-pattern? name-pattern(param-pattern) throws-pattern)
+
+modifiers-pattern 修饰符 比如public private这种（可以指定可以不指定）
+return-type-pattern 返回值类型（必须指定）
+declaring-type-pattern 类型（可以是含包名的全路径类型 可以指定可以不指定）
+name-pattern 方法名（必须指定）
+param-pattern 参数类型（必须指定）
+方法的返回类型 方法名及参数部分的匹配模式是必须指定的 其他部分可以省略。
+我们还可以在表达式中使用两种通配符：*和..
+  第一：*可以用于任何部分的匹配模式中，匹配相邻的多个字符，即一个Work 。如果放在了方法参数的位置标示参数是任何类型的。
+例如：execution(* *(String))
+  第二：..通配符可以在两个位置使用 一个是declaring-type-pattern的位置，一个是在方法参数匹配模式的位置。
+如果是放在了方法类型的位置，可以指定多个层次的类型声明。例如：
+execution(void cn.spring.*.doSomething(*)) 指定到cn.spring下的所有类型。
+如果是放在了方法参数的匹配位置，则表示该方法可以有0到多个参数。例如：
+execution(void *.doSomething(..))
+```
+
+
+
+目标类：
+
+```java
+public class MathCaculator {
+
+    public int div(int a, int b){
+        System.out.println("div is running...");
+        int res = a/b;
+        return res;
+    }
+
+}
+```
+
+切面：
+
+```java
+//切面类
+@Aspect
+public class MathAspect {
+
+
+    @Pointcut("execution(public int com.ooyhao.aop.MathCaculator.*(..))")
+    public void pointCut(){}
+
+    @Before("pointCut()")
+    public void logBefore(JoinPoint joinPoint){
+        String methodName = joinPoint.getSignature().getName();
+        System.out.println(methodName+"方法前执行");
+    }
+
+    @After("pointCut()")
+    public void logAfter(JoinPoint joinPoint){
+        String methodName = joinPoint.getSignature().getName();
+        System.out.println(methodName+"方法后执行");
+    }
+
+    @AfterReturning(value = "com.ooyhao.aop.MathAspect.pointCut()",returning ="result" )
+    public void logReturning(JoinPoint joinPoint,Object result){
+        String methodName = joinPoint.getSignature().getName();
+        System.out.println(methodName+"方法返回后执行:"+result);
+    }
+
+    @AfterThrowing(value = "pointCut()",throwing = "e")
+    public void logException(JoinPoint joinPoint,Exception e){
+        String methodName = joinPoint.getSignature().getName();
+        System.out.println(methodName+"方法出现异常时执行"+e);
+    }
+
+    @Around("pointCut()")
+    public int logAround(ProceedingJoinPoint pjp) throws Throwable {
+
+        System.out.println(pjp.getSignature().getName()+"环绕方法执行");
+        return (Integer) pjp.proceed();
+    }
+
+}
+```
+
+配置类：
+
+```java
+@EnableAspectJAutoProxy
+@Configuration
+public class AopConfig {
+
+    @Bean
+    public MathCaculator mathCaculator(){
+        return new MathCaculator();
+    }
+
+
+    @Bean
+    public MathAspect mathAspect(){
+        return new MathAspect();
+    }
+
+}
+```
+
+测试：
+
+```java
+@Test
+public void test(){
+    AnnotationConfigApplicationContext applicationContext = new
+            AnnotationConfigApplicationContext(AopConfig.class);
+    MathCaculator caculator = applicationContext.getBean(MathCaculator.class);
+    caculator.div(1,1);
+}
+```
+
+总结：
+
+```xml
+ * AOP：【动态代理】
+ * 		指在程序运行期间动态的将某段代码切入到指定方法指定位置进行运行的编程方式；
+ * 
+ * 1、导入aop模块；Spring AOP：(spring-aspects)
+ * 2、定义一个业务逻辑类（MathCalculator）；在业务逻辑运行的时候将日志进行打印（方法之前、方法运行结束、方法出现异常，xxx）
+ * 3、定义一个日志切面类（LogAspects）：切面类里面的方法需要动态感知MathCalculator.div运行到哪里然后执行；
+ * 		通知方法：
+ * 			前置通知(@Before)：logStart：在目标方法(div)运行之前运行
+ * 			后置通知(@After)：logEnd：在目标方法(div)运行结束之后运行（无论方法正常结束还是异常结束）
+ * 			返回通知(@AfterReturning)：logReturn：在目标方法(div)正常返回之后运行
+ * 			异常通知(@AfterThrowing)：logException：在目标方法(div)出现异常以后运行
+ * 			环绕通知(@Around)：动态代理，手动推进目标方法运行（joinPoint.procced()）
+ * 4、给切面类的目标方法标注何时何地运行（通知注解）；
+ * 5、将切面类和业务逻辑类（目标方法所在类）都加入到容器中;
+ * 6、必须告诉Spring哪个类是切面类(给切面类上加一个注解：@Aspect)
+ * [7]、给配置类中加 @EnableAspectJAutoProxy 【开启基于注解的aop模式】
+ * 		在Spring中很多的 @EnableXXX;
+
+
+ * 三步：
+ * 	1）、将业务逻辑组件和切面类都加入到容器中；告诉Spring哪个是切面类（@Aspect）
+ * 	2）、在切面类上的每一个通知方法上标注通知注解，告诉Spring何时何地运行（切入点表达式）
+ *  3）、开启基于注解的aop模式；@EnableAspectJAutoProxy
+```
+
+http://blog.didispace.com/categories/Spring-Boot/
 
 
 

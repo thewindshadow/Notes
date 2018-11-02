@@ -1,4 +1,4 @@
-#   1.SpringBoot基础
+1.SpringBoot基础
 
 ## 1.@Configuration，@ComponentScan，@Bean
 
@@ -4467,19 +4467,363 @@ public class HelloServiceAutoConfiguration {
 
 ```
 
-# 更多SpringBoot整合示例
+### 更多SpringBoot整合示例
 
 https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples
 
 
 
+# 14.SpringBoot+MyBatis+Swagger2实现Restful接口
+
+1.pom文件
+
+~~~xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.ooyhao</groupId>
+    <artifactId>spring-boot-restful</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>spring-boot-restful</name>
+    <description>Demo project for Spring Boot</description>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.0.6.RELEASE</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <java.version>1.8</java.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>1.0.26</version>
+        </dependency>
+
+        <!-- mysql connector -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>2.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>2.2.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+
+</project>
+~~~
+
+application.yaml
+
+~~~yaml
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    username: root
+    password: root
+    url: jdbc:mysql://120.79.167.88:3306/springbootdb?useUnicode=true&amp;amp&amp;characterEncoding=utf-8
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+~~~
 
 
 
+Swagger2配置类
+
+~~~java
+@Configuration
+@EnableSwagger2
+public class Swagger2 {
+
+
+    public Docket createRestApi(){
+        return new Docket(DocumentationType.SWAGGER_2)
+                .apiInfo(apiInfo())
+                .select()
+                .apis(RequestHandlerSelectors.
+                        basePackage("com.ooyhao.springbootrestful"))
+                .paths(PathSelectors.any())
+                .build();
+    }
+
+
+    private ApiInfo apiInfo(){
+        return new ApiInfoBuilder()
+                .title("Spring boot中使用Swagger2构造RESTFUL APIS")
+                .description("更多资源获取，请关注 程序yuan")
+                .termsOfServiceUrl("http://www.ooyhao.top/jd")
+                .contact("ouYang")
+                .version("V1.0")
+                .build();
+    }
+
+}
+~~~
+
+springbootApplication.java
+
+~~~java
+@SpringBootApplication
+@MapperScan("com.ooyhao.springbootrestful.mapper")
+public class SpringBootRestfulApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SpringBootRestfulApplication.class, args);
+    }
+}
+~~~
+
+实体类：
+
+```java
+public class Student {
+
+    private Integer id;
+    private String stuno;
+    private String name;
+    private String major;
+    private Date birthday;
+
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getStuno() {
+        return stuno;
+    }
+
+    public void setStuno(String stuno) {
+        this.stuno = stuno;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getMajor() {
+        return major;
+    }
+
+    public void setMajor(String major) {
+        this.major = major;
+    }
+
+    public Date getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(Date birthday) {
+        this.birthday = birthday;
+    }
+
+    @Override
+    public String toString() {
+        return "Student{" +
+                "id=" + id +
+                ", stuno='" + stuno + '\'' +
+                ", name='" + name + '\'' +
+                ", major='" + major + '\'' +
+                ", birthday=" + birthday +
+                '}';
+    }
+}
+```
+
+Mapper.java
+
+~~~java
+public interface StudentMapper {
+
+    //查询所有Student
+    @Select("select * from studentinfo")
+    public List<Student> findAll();
+
+    //根据id查询Student
+    @Select("select * from studentinfo where id = #{id} ")
+    public Student findStudentById(Integer id);
+
+    //根据id删除Student
+    @Delete("delete from studentinfo where id = #{id} ")
+    public void deleteStudentById(Integer id);
+
+    //添加Student
+    @Insert("insert into studentinfo (stuno,name,major,birthday) " +
+            "values (#{stuno},#{name},#{major},#{birthday}) ")
+    public void insertStudent(Student student);
+
+    //更新Student
+    @Update("update studentinfo set stuno = #{stuno}, " +
+            " name = #{name}," +
+            " major = #{major}," +
+            " birthday = #{birthday} where id = #{id} ")
+    public void updateStudent(Student student);
+
+
+}
+~~~
 
 
 
+Service.java
 
+~~~java
+@Service
+public class StudentService {
+
+    @Autowired
+    private StudentMapper studentMapper;
+
+    public List<Student> findAllStudent(){
+        return studentMapper.findAll();
+    }
+
+    public Student findStudentById(Integer id){
+        return studentMapper.findStudentById(id);
+    }
+
+    @Transactional
+    public void deleteStudentById(Integer id){
+        studentMapper.deleteStudentById(id);
+    }
+
+    @Transactional
+    public void insertStudent(Student student){
+        studentMapper.insertStudent(student);
+    }
+
+    @Transactional
+    public void updateStudent(Student student){
+        studentMapper.updateStudent(student);
+    }
+
+}
+~~~
+
+Controller.java
+
+~~~java
+@RestController
+public class StudentController {
+
+    @Autowired
+    private StudentMapper studentMapper;
+
+//    @RequestMapping("/stu")
+    @ApiOperation(value = "获取所有学生列表",notes = "")
+    @GetMapping("/stu")
+    public List<Student> findAllStudent(){
+        return studentMapper.findAll();
+    }
+
+
+//    @RequestMapping("/stu/{id}")
+    @ApiOperation(value = "获取单个学生",notes = "根据指定id获得指定学生")
+    @ApiImplicitParam(name = "id",value = "学生id",
+            required = true, dataType = "Integer", paramType = "path")
+    @GetMapping("/stu/{id}")
+    public Student findStudentById(@PathVariable("id") Integer id){
+        return studentMapper.findStudentById(id);
+    }
+
+//    @RequestMapping("/stu/{id}")
+    @ApiOperation(value = "删除学生",notes = "根据指定id删除指定学生")
+    @ApiImplicitParam(name = "id", value = "学生id",
+            required = true, dataType = "Integer",paramType = "path")
+    @DeleteMapping("/stu/{id}")
+    public String deleteStudentById(@PathVariable("id") Integer id){
+        studentMapper.deleteStudentById(id);
+        return "success";
+    }
+
+    @PutMapping("/stu")
+    @ApiOperation(value = "更新学生信息",notes = "根据学生对象来更新")
+    @ApiImplicitParam(name = "student",value = "学生对象",
+            required = true,dataType = "Student")
+    public String updateStudent(@RequestBody Student student){
+        studentMapper.updateStudent(student);
+        return "success";
+    }
+
+    @PostMapping("/stu")
+    @ApiOperation(value = "添加学生",notes = "根据学生对象添加学生")
+    @ApiImplicitParam(name = "student", value = "学生对象",
+            required = true, dataType = "Student")
+    public Student insertStudent(@RequestBody Student student){
+        System.out.println(student);
+        studentMapper.insertStudent(student);
+        return student;
+    }
+}
+~~~
+
+
+
+源码：[Github仓库](https://github.com/ooyhao/SpringBoot_Restful_Swagger2)
 
 
 
