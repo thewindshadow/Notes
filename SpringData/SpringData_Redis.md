@@ -1559,7 +1559,7 @@ ZSetOperations提供了一系列方法对有序集合进行操作：
 注：TimeUnit是java.util.concurrent包下面的一个类，表示给定单元粒度的时间段
 常用的颗粒度
 
-```
+```java
 TimeUnit.DAYS //天
 TimeUnit.HOURS //小时
 TimeUnit.MINUTES //分钟
@@ -1567,4 +1567,341 @@ TimeUnit.SECONDS //秒
 TimeUnit.MILLISECONDS //毫秒
 ```
 
- 
+
+
+## testOpsForValue
+
+看源码
+
+
+
+~~~java
+@Test
+    public void testOpsForValue(){
+        //设置String的value值
+//        stringRedisTemplate.opsForValue().set("ooyhao","ouYang");
+        ValueOperations<String, String> ops = 
+                stringRedisTemplate.opsForValue();
+        //在指定key值所对应的value上追加内容
+//        ops.append("ooyhao","1996");
+        //获取String的key所对应的value、
+//        String name = ops.get("ooyhao");
+        //设置值
+//        ops.set("number","1");
+//        在指定value值加1（++1）
+//        ops.increment("number");
+//        在指定value值减1（--1）
+//        ops.decrement("number");
+        //设置新的value，返回原来的value
+//        String set = ops.getAndSet("ooyhao", "Hello Redis");
+        ops.set("setRangeValue","123");
+        //设置值，（在原有value的offset位置开始覆盖。（offset >= 0））
+        ops.set("setRangeValue","123456",0);
+        //删除指定key值。
+        ops.getOperations().delete("setRangeValue");
+        String value = ops.get("setRangeValue");
+        System.out.println(value);
+    }
+~~~
+
+
+
+## testOpsForHash
+
+~~~java
+@Test
+    public void testOpsForHash(){
+        HashOperations<String, Object, Object> ops
+                = stringRedisTemplate.opsForHash();
+//        Map<String,Object> map = new HashMap<>();
+//        map.put("name","ouYang");
+//        map.put("age","22");
+        //一次存储一个map数据
+//        ops.putAll("student",map);
+        //将指定key的数据一次性取出
+//        Map<Object, Object> student = ops.entries("student");
+//        for(Map.Entry entry : student.entrySet()){
+//            System.out.println(entry.getKey()+":"+entry.getValue());
+//        }
+        //取出指定key下的指定hashKey的hashValue
+//        String name = ops.get("student","name").toString();
+//        System.out.println(name);
+        //设置指定key下的指定hashKey的hashValue
+//        ops.put("student","sex","男");
+//        System.out.println(ops.get("student","sex"));
+        //判断指定key的hashKey是否存在
+//        System.out.println(ops.hasKey("student","stuNo"));
+        //获得指定key下的所有hashKey
+        Set<Object> studentKeys = ops.keys("student");
+        System.out.println(studentKeys);
+        //获得指定key下的所有hashValue
+        List<Object> studentValues = ops.values("student");
+        System.out.println(studentValues);
+        //报错，由于sex不是一个integer（exception info : ERR hash value is not an integer）
+//        ops.increment("student","sex",1);
+//        ops.increment("student","age",1);
+//        对指定key下的hashKey的hashValue进行增/减
+//        ops.increment("student","age",-1);
+//        System.out.println(ops.get("student","age"));
+//        ops.put("student","testKey1","1");
+//        ops.put("student","testKey2","2");
+//        System.out.println(ops.get("student","testKey1"));
+//        System.out.println(ops.get("student","testKey2"));
+        //批量删除指定key下的hashKey
+//        ops.delete("student","testKey1","testKey2");
+        //获得指定key下hashKey的hashValue的长度
+//        Long length = ops.lengthOfValue("student", "age");
+//        System.out.println(ops.get("student","age"));
+//        System.out.println(length);
+//        List list = new ArrayList();
+//        list.add("name");
+//        list.add("age");
+//        list.add("sex");
+        //批量取出指定key的hashKeys的hashValues
+//        List multiGet = ops.multiGet("student", list);
+//        System.out.println(multiGet);
+        //设置hashValue,如果指定key下的hashValue不存在。
+//        System.out.println(ops.putIfAbsent("student","studentNo1","N007"));
+//        System.out.println(ops.putIfAbsent("student","age","20"));
+        //获得指定key下的hashKey-hashValue的个数
+//        Long size = ops.size("student");
+//        System.out.println(size);
+    }
+~~~
+
+
+
+## testOpsForList
+
+~~~java
+@Test
+    public void testOpsForList(){
+        ListOperations<String, String> ops = stringRedisTemplate.opsForList();
+        //从右边压入一个value。
+//        ops.rightPush("user","ouYang");
+        //直译：设置。其实个人觉得是覆盖，即只能覆盖已经存在的索引（既不创建key，也不创建key下不存在的index的value）
+//        ops.set("user",0,"ouYang1");
+        //求大小
+//        System.out.println(ops.size("user"));
+        //从左边压入一个value
+//        ops.leftPush("user","男");
+        //获得指定范围的数据(集合)
+//        List<String> user = ops.range("user", 0, -1);
+//        System.out.println(user);//[ 男, ouYang1]
+        //获得指定下标的值。类似：list.get(index)
+//        String user = ops.index("user", 1);
+        //返回的list的长度
+//        Long user = ops.leftPush("user", "");
+        //左边压入多个
+//        ops.leftPushAll("user","1","2","3","");
+        List<String> range = ops.range("stu", 0, -1);
+//        //截取子集合，subList。改变本身
+//        ops.trim("user",0,3);
+//        range = ops.range("user", 0, -1);
+        //从左开始，压入到第一个pivot值的左边。如果不存在，则不压入。
+//        ops.leftPush("user","2","6");
+        //如果key存在，则左边压入
+//        Long user = ops.leftPushIfPresent("user1", "7");
+        //从左边开始，删除指定个数的指定value，不足个数，则只是全部删除。
+//        Long user = ops.remove("user", 3, "6");
+//        List<String> range1 = ops.range("stu", 0, -1);
+//        //取出sourceKey的右边一个value，压入到destinationKey的左边。
+//        String s = ops.rightPopAndLeftPush("user", "stu");
+//
+//        range = ops.range("user", 0, -1);
+//        range1 = ops.range("stu", 0, -1);
+//        System.out.println(range);
+//        System.out.println(range1);
+        //java.lang.IllegalArgumentException: non null key required
+//        ops.leftPush(null, "we");
+//        List<String> aLong = ops.range("null", 0, -1);
+//        System.out.println(aLong);
+
+//        ops.leftPop("user",1000, TimeUnit.MILLISECONDS);
+        ops.leftPop("stu",5, TimeUnit.SECONDS);
+        range = ops.range("stu", 0, -1);
+        System.out.println(range);
+    }
+~~~
+
+## testOpsForSet
+
+~~~java
+@Test
+    public void testOpsForSet(){
+        SetOperations<String, String> ops = stringRedisTemplate.opsForSet();
+        //添加数据，与java Set一样，不能重复
+//        Long aLong = ops.add("customer", "A", "B", "C","D");
+//        Long aLong1 = ops.add("boss", "A", "C", "E","F");
+        Long aLong1 = ops.add("manager", "A", "C", "W","Y");
+        //判断指定值是否是key的成员，即key中是否存在o
+//        Boolean isMember = ops.isMember("customer","c1");
+        //获得所有成员
+        Set<String> customer = ops.members("customer");
+        Set<String> boss = ops.members("boss");
+        Set<String> manager = ops.members("manager");
+        System.out.println("customer:"+customer);
+        System.out.println("boss    :"+boss);
+        System.out.println("manager :"+manager);
+        //左边弹出一个成员
+//        String pop = ops.pop("customer");
+        //左边弹出count个成员
+//        List<String> strings = ops.pop("customer", 2);
+        //移除批量元素
+//        ops.remove("customer","c1","b3","b2");
+
+        //返回的是customer中与boss中不同的。
+//        Set<String> stringSet = ops.difference("customer", "boss");
+        //返回的是boss中与customer中不同的。
+//        Set<String> stringSet = ops.difference("boss", "customer");
+
+        List<String> list = new ArrayList<>();
+        list.add("boss");
+        list.add("manager");
+        //与多个List相比，返回customer中不同于其他集合的值
+//        Set<String> stringSet = ops.difference("customer", list);
+        //先把customer-boss，剩余相差的元素在添加到boss中，会把之前的元素清除
+//        Long aLong = ops.differenceAndStore("customer", "boss", "boss");
+        //先把customer-list，剩下的元素添加到boss中，会把之前的元素清除
+//        Long aLong = ops.differenceAndStore("customer", list, "boss");
+        //随机从key集合中取出count个元素，并且不重复。
+//        Set<String> strings = ops.distinctRandomMembers("customer", 2);
+        //取出customer与manager的交集
+//        Set<String> intersect = ops.intersect("customer", "manager");
+        //customer与多个集合求交集
+//        Set<String> intersect = ops.intersect("customer", list);
+        //求customer与boss求交集，将结果存到boss中
+//        ops.intersectAndStore("customer","boss","boss");
+        //求customer与list求交集，将结果存到boss中
+//        ops.intersectAndStore("customer",list,"boss");
+        //随机取出一个元素
+        //String randomMember = ops.randomMember("customer");
+        //随机取出count元素,可重复
+//        List<String> strings = ops.randomMembers("customer", 5);
+        //求大小
+//        Long size = ops.size("customer");
+        //弹出一个元素，即移除并返回,并不一定按顺序
+//        String pop = ops.pop("customer");
+        //弹出count个元素，即移除并返回
+//        List<String> pop = ops.pop("manager", 2);
+        //求customer与manager并集
+//        Set<String> union = ops.union("customer", "manager");
+        //求customer与list中的key求并集
+//        Set<String> union = ops.union("customer", list);
+        //求customer与boss的交集，将结果存入到boss
+//        ops.unionAndStore("customer","boss","boss");
+        //求customer与list中key求交集，将结果存入到boss
+//        ops.unionAndStore("customer",list,"boss");
+//        System.out.println(union);
+
+        customer = ops.members("customer");
+        boss = ops.members("boss");
+        manager = ops.members("manager");
+        System.out.println("customer:"+customer);
+        System.out.println("boss    :"+boss);
+        System.out.println("manager :"+manager);
+
+    }
+~~~
+
+
+
+## testOpsForZSet
+
+~~~java
+@Test
+    public void testOpsForZSet(){
+
+        ZSetOperations<String, String> ops = stringRedisTemplate.opsForZSet();
+
+        //添加单个value
+        ops.add("player","tom",2.1);
+        ops.add("player","jack",3.3);
+        ops.add("player","rose",1.3);
+        ops.add("player","lily",1.5);
+        ops.add("doctor","tom",2);
+        ops.add("doctor","jack",3.2);
+        ops.add("doctor","rose",1.3);
+        ops.add("doctor","lily",1.5);
+        ops.add("teacher","tom",2);
+        Set<ZSetOperations.TypedTuple<String>> set = new HashSet<>();
+        DefaultTypedTuple<String> typedTuple1 = new DefaultTypedTuple<>("jack",3.2);
+        DefaultTypedTuple<String> typedTuple2 = new DefaultTypedTuple<>("rose",1.3);
+        DefaultTypedTuple<String> typedTuple3 = new DefaultTypedTuple<>("lily",2.5);
+        set.add(typedTuple1);
+        set.add(typedTuple2);
+        set.add(typedTuple3);
+        //批量添加，具有分数的value
+        ops.add("teacher",set);
+        //统计分数在指定区间的value的个数
+//        Long count = ops.count("teacher", 2, 4);
+        //添加指定key的value的分数（权重）[正(加)/负(减)]
+//        Double aDouble = ops.incrementScore("teacher", "tom", 0.3);
+
+        List<String> list = new ArrayList<>();
+        list.add("player");
+        list.add("doctor");
+        //与上面set一样(交集)
+//        System.out.println(ops.range("doctor",0,-1));
+        //交集，只与value比较，不使用score
+//        Long aLong1 = ops.intersectAndStore("teacher", "player", "teacher");
+//        Long aLong = ops.intersectAndStore("teacher", list, "doctor");
+
+        //获得指定value的排名
+//        System.out.println("rank:"+ops.rank("teacher","rose"));
+
+//        ops.remove("teacher",values);//values可变参数
+//        ops.removeRange("teacher",start,end);//通过下标删
+//        ops.removeRangeByScore("teacher",min,max);//通过分数删
+
+        //size与zCard一致
+//        Long size = ops.size("teacher");
+//        Long zCard = ops.zCard("teacher");
+        //返回指定范围的value，带有分数
+//        Set<ZSetOperations.TypedTuple<String>> tuples
+//                = ops.rangeByScoreWithScores("teacher", 0, 10);
+
+        //获取指定分数范围筛选后，从第offset个开始，返回count个，包含score
+//        Set<ZSetOperations.TypedTuple<String>> tuples =
+//                ops.rangeByScoreWithScores("teacher", 5, 10, 0, 2);
+//        for(ZSetOperations.TypedTuple<String> typedTuple : tuples){
+//            System.out.println(typedTuple.getValue()+"/"+typedTuple.getScore());
+//        }
+
+        Set<ZSetOperations.TypedTuple<String>> teacher
+                = ops.rangeWithScores("player", 0, -1);
+        for(ZSetOperations.TypedTuple<String> tuple : teacher){
+            System.out.println(tuple.getValue()+"--"+tuple.getScore());
+        }
+
+
+
+        //将排名与对称位置的调换(原有元素不变)
+//        Long aLong = ops.reverseRank("teacher", "tom");  // 1 -- 2
+//        Long rose = ops.reverseRank("teacher", "rose");  // 0 -- 3
+        //返回排名调换之后的set，原有元素排名不变，根据分数
+//        Set<String> stringSet = ops.reverseRangeByScore("teacher", 1, 3);
+        //返回排名调换之后的set，原有元素排名不变，根据索引
+//        Set<String> stringSet = ops.reverseRange("teacher", 2, 4);
+        //其他类似
+        //求并集，其他类似set
+        Long aLong = ops.unionAndStore("teacher", "player", "player");
+        System.out.println(aLong);
+        RedisZSetCommands.Range range = new RedisZSetCommands.Range();
+        //首先使用分数进行排序。
+        //使用gt,gte,lt,lte,是按照字母顺序排。
+//        range.gt("jack"); //>
+//        range.gte("j");
+//        range.lt("t");
+//        range.lte("tom");
+        Set<String> strings = ops.rangeByLex("player", range);
+        System.out.println(strings);
+
+        //返回指定分数范围的value值。不包含score
+//        Set<String> stringSet = ops.rangeByScore("teacher", 2, 4);
+
+        //获取指定范围的value
+//        Set<String> teacher = ops.range("doctor", 0, -1);
+    }
+~~~
+
