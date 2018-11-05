@@ -1,5 +1,85 @@
 # Nodejs
 
+## 说在前面的：
+
+### 简介
+
+- Node.js® is a JavaScript runtime built on [Chrome's V8 JavaScript engine](https://developers.google.com/v8/).
+  - Node.js不是一门语言
+  - Node.js不是库，也不是框架
+  - Node.js是一个JavaScript运行环境
+  - 简单点来说就是node.js可以解析和执行JavaScript代码。
+  - 以前只有浏览器可以解析和执行JavaScript代码
+  - 也就是说现在的JavaScript可以完全脱离浏览器运行，一切都归功于node.js
+  - Event-driven 事件驱动，
+  - non-blocking i/o模型 非阻塞的io模型
+  - npm是世界上最大的开源库生态系统
+  - 绝大多数JavaScript相关的包都存放在了npm上
+  - 构建于Chrome的v8引擎之上
+    - 代码只是具有特定格式的字符串而已
+    - 引擎可以认识它，引擎可以帮你解析和执行
+    - google chrome的v8引擎是目前公认的解析和执行JavaScript代码最快的
+    - Node.js的作者把google Chrome的v8引擎移植出来，开发一个独立的JavaScript运行环境。
+
+
+- 浏览器中的JavaScript
+  - ecmascript
+    - 基本语法
+  - BOM
+  - DOM
+- Node.js中的JavaScript
+  - 没有BOM，DOM
+  - EcmaCript
+  - 在node这个js执行环境中为JavaScript提供来一些服务器级别的操作API
+    - 文件读写
+    - 网络服务的构建
+    - 网络通信
+    - http服务器 
+
+### Node.js能做什么
+
+- web 服务端后台
+- 命令行工具
+  - npm（node）
+  - git(c 语言)
+  - hexo（node）
+- 对于前段工程师来讲，接触node最多的是它的命令行工具
+  - 自己写的少，主要是用第三方
+  - webpack
+  - gulp
+
+### 一些资源
+
+- 《深入浅出Node.js》 朴灵
+  - 偏理论
+- 《Node.js权威指南》
+  - API讲解
+  - 没有实战
+- Node入门：[www.nodebeginner.org/index-zh-cn.html](www.nodebeginner.org/index-zh-cn.html)
+
+## 起步
+
+### 安装Node
+
+- 官网`nodejs.org`安装。一路`next`
+- 使用`node --version`或`node -v`看版本，
+- 如果有版本号，则表示安装成功
+
+### HelloWorld
+
+在目录写一段示例代码：
+
+```
+var foo = 'bar'
+console.log(foo);
+```
+
+进入当前目录下，使用 `node +文件名.js`运行
+
+
+
+
+
 ## 起步案例
 
 ### 读文件
@@ -33,7 +113,6 @@ console.log("end");
             测试nodejs读取文件
             end
         */
-
 ~~~
 
 ### 写文件
@@ -164,21 +243,21 @@ console.log("程序执行完毕！");
 
 ### 方法
 
-| 序号 | 方法 & 描述                                                  |
-| ---- | ------------------------------------------------------------ |
+| 序号   | 方法 & 描述                                  |
+| ---- | ---------------------------------------- |
 | 1    | **addListener(event, listener)**  为指定事件添加一个监听器到监听器数组的尾部。 |
 | 2    | **on(event, listener)** 为指定事件注册一个监听器，接受一个字符串 event 和一个回调函数。 `server.on('connection', function (stream) {   console.log('someone connected!'); });` |
 | 3    | **once(event, listener)** 为指定事件注册一个单次监听器，即 监听器最多只会触发一次，触发后立刻解除该监听器。 `server.once('connection', function (stream) {   console.log('Ah, we have our first user!'); });` |
 | 4    | **removeListener(event, listener)** 移除指定事件的某个监听器，监听器必须是该事件已经注册过的监听器。它接受两个参数，第一个是事件名称，第二个是回调函数名称。 `var callback = function(stream) {   console.log('someone connected!'); }; server.on('connection', callback); // ... server.removeListener('connection', callback);` |
 | 5    | **removeAllListeners([event])** 移除所有事件的所有监听器， 如果指定事件，则移除指定事件的所有监听器。 |
 | 6    | **setMaxListeners(n)** 默认情况下， EventEmitters 如果你添加的监听器超过 10 个就会输出警告信息。 setMaxListeners 函数用于提高监听器的默认限制的数量。 |
-| 7    | **listeners(event)** 返回指定事件的监听器数组。              |
+| 7    | **listeners(event)** 返回指定事件的监听器数组。       |
 | 8    | **emit(event, [arg1], [arg2], [...])** 按参数的顺序执行每个监听器，如果事件有注册监听返回 true，否则返回 false。 |
 
 ### 类方法
 
-| 序号 | 方法 & 描述                                                  |
-| ---- | ------------------------------------------------------------ |
+| 序号   | 方法 & 描述                                  |
+| ---- | ---------------------------------------- |
 | 1    | **listenerCount(emitter, event)** 返回指定事件的监听器数量。 |
 
 ```
@@ -188,8 +267,8 @@ events.emitter.listenerCount(eventName) //推荐
 
 ### 事件
 
-| 序号 | 事件 & 描述                                                  |
-| ---- | ------------------------------------------------------------ |
+| 序号   | 事件 & 描述                                  |
+| ---- | ---------------------------------------- |
 | 1    | **newListener**   **event** - 字符串，事件名称 **listener** - 处理事件函数  该事件在添加新监听器时被触发。 |
 | 2    | **removeListener**   **event** - 字符串，事件名称 **listener** - 处理事件函数  从指定监听器数组中删除一个监听器。需要注意的是，此操作将会改变处于被删监听器之后的那些监听器的索引 |
 
@@ -288,9 +367,9 @@ module.exports 来改变访问接口。
 
 ~~~xml
 	包是在模块基础上更深一步的抽象，Node.js 的包类似于 C/C++ 的函数库或者 Java/.Net 的类库。它将某个独立的功能封装起来，用于发布、更新、依赖管理和版本控制。Node.js 根据 CommonJS 规范实现了包机制，开发了 npm来解决包的发布和获取需求。 Node.js 的包是一个目录，其中包含一个 JSON 格式的包说明文件 package.json。严格符合 CommonJS 规范的包应该具备以下特征： 
-      package.json 必须在包的顶层目录下；  
+     package.json 必须在包的顶层目录下；  
      二进制文件应该在 bin 目录下；  
-      JavaScript 代码应该在 lib 目录下；  
+     JavaScript 代码应该在 lib 目录下；  
      文档应该在 doc 目录下；  
      单元测试应该在 test 目录下。 
 Node.js 对包的要求并没有这么严格，只要顶层目录下有 package.json，并符合一些规范即可。当然为了提高兼容性，我们还是建议你在制作包的时候，严格遵守 CommonJS 规范。  
@@ -333,9 +412,27 @@ package.json 是 CommonJS 规定的用来描述包的文件，完全符合规范
 	  dependencies：包的依赖，一个关联数组，由包名称和版本号组成。	
 ~~~
 
+## 解决编码问题
 
+~~~js
+var http = require("http");
+var server = http.createServer();
+server.listen("3333",function () {
+    console.log("http服务器创建成功，正在监听3333端口号：");
+});
+server.on("request",function (req,res) {
+    //在服务器默认发送的数据是utf-8，但是浏览器不知道是utf-8。
+    //浏览器在不知道服务器响应内容的编码情况下，会按照当前系统的默认编码去解析，
+	//中文操作系统，默认是gbk
+	//解决方法：正确的告诉浏览器我给你发送的内容是什么编码。
+    res.setHeader("Content-Type","text/plain;charset=utf-8");
+	res.end("Hello 世界");
+});
+~~~
 
+结果图：
 
+![](image/char.png)
 
 
 
