@@ -159,7 +159,6 @@ server.on("request",function (req,res) {
     }else{
         res.end("404 File Not Found!");
     }
-
 });
 ~~~
 
@@ -355,10 +354,14 @@ myModule.sayHello();
 ~~~xml
 
  注意：
-	模块接口的唯一变化是使用 module.exports = Hello 代替了 exports.Hello=Hello。在外部引用该模块时，其接口对象就是要输出的 Hello 对象本身，而不是原先的exports。
-    事实上，exports 本身仅仅是一个普通的空对象，即 {}，它专门用来声明接口，本质上是通过它为模块闭包的内部建立了一个有限的访问接口。因为它没有任何特殊的地方，所以可以用其他东西来代替，譬如我们上面例子中的 Hello 对象。
+	模块接口的唯一变化是使用 module.exports = Hello 代替了 exports.Hello=Hello。在外部引用该模块
+时，其接口对象就是要输出的 Hello 对象本身，而不是原先的exports。
+    事实上，exports 本身仅仅是一个普通的空对象，即 {}，它专门用来声明接口，本质上是通过它为模块闭包的
+内部建立了一个有限的访问接口。因为它没有任何特殊的地方，所以可以用其他东西来代替，譬如我们上面例子中的 
+Hello 对象。
 
-   不可以通过对  exports 直接赋值代替对  module.exports 赋值。exports 实际上只是一个和 module.exports 指向同一个对象的变量，它本身会在模块执行结束后释放，但  module 不会，因此只能通过指定
+   不可以通过对  exports 直接赋值代替对  module.exports 赋值。exports 实际上只是一个和 
+module.exports 指向同一个对象的变量，它本身会在模块执行结束后释放，但  module 不会，因此只能通过指定
 module.exports 来改变访问接口。
 
 ~~~
@@ -434,12 +437,439 @@ server.on("request",function (req,res) {
 
 ![](image/char.png)
 
+### Content-Type
+
+不同的资源使用不同的类型
+
+~~~js
+//引入http核心模块
+var http = require('http');
+var fs = require('fs');
+//通过http核心模块创建http server
+var server = http.createServer();
+
+server.listen('3333',function(){
+	console.log('server is running at 3333 ....');
+});
+
+server.on('request',function(req,res){
+
+	var url = req.url;
+	if(url === '/html'){
+		fs.readFile("./data/main.html", "utf-8", function(error,data){
+			if(error){
+				res.setHeader("Content-Type","text/plain;charset=utf-8");
+				res.end("资源访问失败");
+			}else{
+				//通过使用text/html标识html页面
+				res.setHeader("Content-Type","text/html;charset=utf-8");
+				res.end(data);
+			}
+		});
+	}else if(url === '/koala.jpg'){
+		fs.readFile("./data/Koala.jpg", function(error,data){
+			if(error){
+				res.setHeader("Content-Type","text/plain;charset=utf-8");
+				res.end("404 file not found");
+			}else{
+				//通过image/jpeg标识jpg图片
+				res.setHeader("Content-Type","image/jpeg");
+				res.end(data);
+			}
+		});
+	}
+
+});
+~~~
+
+
+
+| .jpg  | image/jpeg               |
+| ----- | ------------------------ |
+| .js   | application/x-javascript |
+| .html | text/html                |
+| .css  | text/css                 |
+
+http://tool.oschina.net/commons
+
+
+
+### 获取系统数据
+
+~~~js
+//引入os模块
+//获取机器信息
+var os = require("os");
+//操作路径
+var path = require("path");
+
+//获取当前机器的cpu信息
+console.log(os.cpus());
+
+//获得当前机器的内存大小（字节）
+console.log("memory:"+os.totalmem()/1024/1024/1024);
+
+
+console.log("获取系统位置："+os.arch());
+console.log("获得网卡信息：");
+console.log(os.networkInterfaces());
+~~~
+
+### 路径 path
+#### path.extname(path)
+
+~~~js
+path <string>
+返回: <string>
+path.extname() 方法返回 path 的扩展名，即从 path 的最后一部分中的最后一个 .（句号）字符到字符串结束。 如果 path 的最后一部分没有 . 或 path 的文件名（见 path.basename()）的第一个字符是 .，则返回一个空字符串。
+
+例子：
+
+path.extname('index.html');
+// 返回: '.html'
+
+path.extname('index.coffee.md');
+// 返回: '.md'
+
+path.extname('index.');
+// 返回: '.'
+
+path.extname('index');
+// 返回: ''
+
+path.extname('.index');
+// 返回: ''
+如果 path 不是一个字符串，则抛出 TypeError。
+~~~
+
+#### path.basename(path[, ext])#
+~~~js
+查看英文版参与翻译
+
+版本历史
+path <string>
+ext <string> 可选的文件扩展名
+返回: <string>
+path.basename() 方法返回一个 path 的最后一部分，类似于 Unix 中的 basename 命令。 没有尾部文件分隔符，请查阅path.sep。
+
+例子：
+
+path.basename('/foo/bar/baz/asdf/quux.html');
+// 返回: 'quux.html'
+
+path.basename('/foo/bar/baz/asdf/quux.html', '.html');
+// 返回: 'quux'
+如果 path 不是一个字符串或提供了 ext 但不是一个字符串，则抛出 TypeError。
+
+~~~
+
+## 在Node中使用art-template模板引擎
+[官方文档](https://aui.github.io/art-template/zh-cn/docs/installation.html)
+
+安装 `Npm`
+~~~shell
+    npm install art-template --save
+    命令在哪里执行就会把包下载到哪里，默认会下载到node_modules目录中
+    node_modules 不要改，也不能改。
+~~~
+
+![art-template](image/art-template.png)
+
+### 在浏览器中使用art-template模板
+
+~~~html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>05-在浏览器中使用art-template</title>
+</head>
+<body>  
+    <!-- 注意：在浏览器中需要引入lib/template-web.js文件
+        循环写法：{{each hobbies}}{{$value}} {{/each}}
+
+        强调：模板引擎不关心你的字符串内容，只关系自己能认识的模板标记语法；例如：{{}}
+            语法被称之为mustache语法，八字胡语法
+     -->
+    <script type="text/javascript" src="code/node_modules/art-template/lib/template-web.js">
+    </script>
+    <script type="text/template" id="tpl">
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title></title>
+        </head>
+        <body>
+            <p>姓名：{{ name }}</p>
+            <p>年龄：{{ age }}</p>
+            <p>籍贯：{{ province }}</p>
+            <p>我的爱好：{{each hobbies}}{{ $value }} {{/each}}</p>
+        </body>
+        </html>
+    </script>
+    <script>
+        var ret = template('tpl',{
+            name : 'ouYang',
+            age : 22,
+            province:'江西省',
+            hobbies:['写代码','打游戏','听音乐']
+
+        });
+        console.log(ret)
+    </script>
+
+</body>
+</html>
+~~~
 
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+-------------------------------------------------------------------------------
+
+# Node笔记
+记录Node和Vue的练习
+
+## Day01
+1.Node 中只包含ECMAScript，不包含DOM和BOM。
+2.Node 不是一门语言，也不是一个框架，是一个运行平台。
+3.Node 是用来执行js代码的。
+
+### fs核心模块
+#### 读文件
+~~~js
+    var fs = require("fs");
+    fs.readFile("./day01/01-readFile.js",function(error,data){
+        //回调函数第一个参数是error
+        if(error){
+            console.log("读取文件失败");
+        }else{
+            console.log(data.toString());
+        }
+    });
+~~~
+
+#### 写文件
+~~~js
+    var fs = require("fs");
+    fs.writeFile("./data/writeFile.txt","content",function(error){
+        if(error){
+            console.log(error);
+        }
+        console.log("写文件成功");
+    });
+~~~
+
+### Http模块
+#### http 案例
+~~~js
+var http = require("http");
+
+var server = http.createServer();
+
+server.listen("3333",function () {
+    console.log("http服务器创建成功，正在监听3333端口");
+});
+
+server.on("request",function (req,res) {
+
+    var products =[{
+        name:"xiaomi2",
+        price:"1999"
+    },{
+        name:"xiaomi5",
+        price:"2999"
+    },{
+        name:"xiaomi8",
+        price:"3999"
+    }
+    ];
+
+    if(req.url === "/products"){
+        res.end(JSON.stringify(products));
+    }else{
+        res.end("404 File Not Found!");
+    }
+});
+~~~
+
+#### http + fs + Content-Type
+~~~js
+    
+    //引入两个核心模块
+    var fs = require("fs");
+    var http = require("http");
+
+    var server = http.createServer();
+    server.listen("3333",function(){
+        console.log("server is running ... ");
+    });
+
+    server.on("request",function(req,res){
+        var url = req.url;
+        if(url === 'html'){
+            fs.readFile("./day01/data/main.html",function(error,data){
+                if(error){
+                    res.setHeader("Content-Type","text/plain;charset=utf-8");
+                    console.log(error);
+                }else{
+                    res.setHeader("Content-Type","text/html;charset=utf-8");
+                    res.end(data);
+                }
+            });
+        }else if("/jpg"){
+            fs.readFile("./day01/data/Koala.jpg",function(error,data){
+                if(error){
+                    res.setHeader("Content-Type","text/plain;charset=utf-8");
+                    res.end("读取图片失败");
+                }else{
+                    res.setHeader("Content-Type","image/jpeg");
+                    res.end(data);
+                }
+            });
+        }
+
+    });
+~~~
+
+### 模块
+
+- 1.使用exports对象定义接口
+- 2.通过require来加载模块
+
+#### 案例一：
+
+e.js
+~~~js
+    var age = 10;
+
+    function add(a,b){
+        return a + b;
+    }
+~~~
+d.js
+~~~js
+    var e = require("./e.js");
+
+    console.log(e.age);
+    console.log(e.add(1,3));
+~~~
+
+结果：
+~~~js
+D:\Node_Vue\day01\module\d.js:4
+console.log(e.add(1,3));
+              ^
+
+TypeError: e.add is not a function
+    at Object.<anonymous> (D:\Node_Vue\day01\module\d.js:4:15)
+    at Module._compile (internal/modules/cjs/loader.js:707:30)
+    at Object.Module._extensions..js (internal/modules/cjs/loader.js:718:10)
+    at Module.load (internal/modules/cjs/loader.js:605:32)
+    at tryModuleLoad (internal/modules/cjs/loader.js:544:12)
+    at Function.Module._load (internal/modules/cjs/loader.js:536:3)
+    at Function.Module.runMain (internal/modules/cjs/loader.js:760:12)
+    at startup (internal/bootstrap/node.js:308:19)
+    at bootstrapNodeJSCore (internal/bootstrap/node.js:878:3)
+~~~
+
+#### 案例一：
+
+e.js
+~~~js
+    var age = 10;
+
+    function add(a,b){
+        return a + b;
+    }
+
+    exports.age = age;
+
+    exports.add = add;
+~~~
+
+d.js
+~~~js
+    var e = require("./e.js");
+
+    console.log(e.age);
+    console.log(e.add(1,3));
+~~~
+
+结果：
+~~~js
+D:\Node_Vue\day01\module>node d.js
+10
+4
+~~~
+
+
+
+## js 代码风格
+
+ 细则
+- 使用两个空格 – 进行缩进
+- 字符串使用单引号 – 需要转义的地方除外
+- 不再有冗余的变量 – 这是导致 大量 bug 的源头!
+- 无分号 – 这没什么不好。不骗你！
+- 行首不要以 (, [, or ` 开头
+   * 这是省略分号时唯一会造成问题的地方 – 工具里已加了自动检测！
+   * 详情
+- 关键字后加空格 if (condition) { ... }
+- 函数名后加空格 function name (arg) { ... }
+- 坚持使用全等 === 摒弃 == 一但在需要检查 null || undefined 时可以使用 obj == null。
+- 一定要处理 Node.js 中错误回调传递进来的 err 参数。
+- 使用浏览器全局变量时加上 window 前缀 – document 和 navigator 除外
+    避免无意中使用到了这些命名看上去很普通的全局变量， open, length, event 还有 name
+~~~xml
+当采用了无分号的代码风格的时候，只需要注意以下情况就不会出现问题了。
+  当一代代码出现 （ [ `开头的时候，在前面补一个分号，可以避免一些语法错误。
+  所以第三方插件可能一开始就使用分号;开头。（建议在这三种情况时，在之前加上分号（;））
+
+  `是es6新加的一种字符串包裹方式，叫：模板字符串，支持换行和非常方便的拼接。
+~~~
+
+
+
+## 模拟一个简单的Apache服务器
+
+~~~js
+
+//模拟简单Apache服务器
+var baseDir = "./www";
+server.on('request',function(req,res){
+	var url = req.url;
+
+	if(url === '/'){
+		url = "/index.html";
+	}
+	var path = baseDir + url;
+	
+
+	fs.readFile(path, function(error,data){
+		if(error){
+			res.end("404 Not Found");
+		}else{
+			res.end(data);
+		}
+	});
+
+});
+
+~~~
 
 
 
