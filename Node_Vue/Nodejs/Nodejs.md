@@ -128,6 +128,10 @@ fs.writeFile("./data/write.txt","你好，我是nodejs，这是测试nodejs写�
 
 ### 3.3http请求
 
+301 永久重定向（浏览器中会记住）
+
+302 临时重定向
+
 ~~~js
 
 var http = require("http");
@@ -312,7 +316,9 @@ Error [ERR_UNHANDLED_ERROR]: Unhandled error.
 
 ## 5.模块和包
 
-###  5.1什么是模块
+### 5.1模块
+
+####  5.1.1 什么是模块
 
 ~~~xml
  在 Node.js 中，创建一个模块非常简单，因为一个文件就是一个模块，我们要关注的问题仅仅在于如何在其他文件中获取这个模块。Node.js 提供了 exports 和 require 两个对象，其中 exports 是模块公开的接口，require 用于从外部获取一个模块的接口，即所获取模块的 exports 对象。 
@@ -364,7 +370,234 @@ module.exports 来改变访问接口。
 
 ~~~
 
-### 5.2创建包 
+#### 5.1.2 核心模块
+
+- 文件操纵模块fs
+- http服务模块 http
+- url操作模块 url
+- path路径模块 path
+- os操作系统模块
+
+
+
+#### 5.1.3 第三方模块
+
+- art-template
+- 必须通过npm来下载才能使用
+
+
+
+#### 5.1.4 CommonJs模块规范
+
+- 加载require
+- 导出exports
+- exports 可以通过多次使用是这个关键字进行多次导出。将成员挂载到exports上。
+
+~~~js
+function add(a,b){
+	return a + b;
+}
+
+
+exports.add = add;
+
+使用：
+
+var foo = require('./foo.js');
+// var res = foo.add(1,3);
+~~~
+
+- 如果某个模块需要直接导出,而不是挂载到exports上面，可以使用module.exports
+
+~~~js
+function add(a,b){
+	return a + b;
+}
+
+module.exports = add;
+
+使用：
+var add = require('./foo.js');
+add(1,2);
+~~~
+
+##### 5.1.4.1加载
+
+语法：
+
+~~~js
+var 自定义变量名称 = require('模块')；
+~~~
+
+两个作用：
+
+- 执行被加载模块的代码
+- 得到被加载模块的`exports`导出接口对象
+
+##### 5.1.4.2 导出
+
+- Node中是模块作用域，默认文件中所有成员只在当前导出文件模块中有效。
+
+- 对于希望可以被其他模块访问的成员，我们就需要把这个公开的成员挂载到`exports`接口对象中就可以了。
+
+- 导出多个成员（必须在对象中）：
+
+  - ~~~js
+    exports.a = 123;
+    exports.b = 'hello';
+    exports.c = function(){
+    	console.log('ccc');    
+    }
+    exports.d = {
+        foo:'bar'
+    }
+    ~~~
+
+- 导出单个成员（拿到的就是变量，函数）：
+
+  - 以下情况会覆盖，即最后只是一个函数，字符串会被覆盖了。
+
+  - ~~~js
+    module.exports = 'hello';
+    拿到的就是字符串
+    
+    module.exports = function(x,y){
+        return x + y;
+    }
+    ~~~
+
+    也可以用以下方法
+
+    ~~~js
+    module.exports = {
+        add : function(x,y){
+            return x + y;
+        }
+    }
+    ~~~
+
+#### 5.1.5 Nodejs模块中的 exports 与 module.exports
+
+**foo.js**
+
+~~~js
+//在node中，每个模块内部都要一个自己的module对象。
+
+//该module对象中有个成员加：exports，也是一个对象(空对象)
+
+/*
+var module = {
+	exports:{}
+};
+*/
+//可以看出，其实其中有一句
+// var exports = module.exports;
+
+
+exports.foo = "bar";
+
+exports.add = function(x,y){
+	return x + y;
+}
+
+exports = {};
+
+exports.foo1 = 112;
+
+module.exports.name = 'ouYang';
+
+
+// 谁来require 引用我，谁就得到module.exports接口对象。（返回的是module.exports）;
+// 默认在代码的最后有一句：
+// return module.exports;
+~~~
+
+main.js
+
+~~~js
+var foo = require('./foo.js'); //
+
+//这里可以看出是，foo拿到的就是./foo.js中的module.exports对象。
+console.log(foo);
+~~~
+
+结果：
+
+~~~cmd
+D:\Node_Vue\Node\day03\02-模块原理>node main.js
+{ foo: 'bar', add: [Function], name: 'ouYang' }
+~~~
+
+**总结：**
+
+~~~js
+由结果可以看出，下面两条执行之后，在module.exports中并没有生效。
+exports = {};
+exports.foo1 = 112;
+这是因为在nodejs的底层是这样实现的，即为module.export对象指定了一个新的名字。但如果执行了上面的语
+句，就会把这exports = module.exports覆盖。
+var module = {
+	exports:{}
+};
+var exports = module.exports;
+
+而nodejs底层执行的是：return module.exports;
+也就是var foo = require('./foo.js');
+foo 就是module.exports;
+
+所以结果是：
+D:\Node_Vue\Node\day03\02-模块原理>node main.js
+{ foo: 'bar', add: [Function], name: 'ouYang' }
+
+但如果此时在module.exports.name = 'ouYang';这后面加一条语句
+如：module.exports = 'new';
+则结果是：
+D:\Node_Vue\Node\day03\02-模块原理>node main.js
+new
+
+
+结论：初始中var exports = module.exports; 只是将两个变量指向同一个地址。
+	不管是给exports直接赋值，或是直接给module.exports直接赋值。都会影响结果。（如下）
+{
+    //该表了exports的指向
+    exports = {};
+    //改变了module.exports的指向
+    module.exports = 'new';
+}
+
+
+真正使用的时候：
+1·导出多个成员：
+	1.exports.xxx=xxx
+    2.module.exports={
+		xxx:xxx,
+        ...
+    }
+2.导出单个成员
+        module.exports="hello"
+~~~
+
+
+
+### 5.2 require的加载规则
+
+- 优先从缓存加载
+
+  ~~~js
+  
+  ~~~
+
+  
+
+
+
+
+
+
+
+
+
+### 5.3创建包 
 
 ~~~xml
 	包是在模块基础上更深一步的抽象，Node.js 的包类似于 C/C++ 的函数库或者 Java/.Net 的类库。它将某个独立的功能封装起来，用于发布、更新、依赖管理和版本控制。Node.js 根据 CommonJS 规范实现了包机制，开发了 npm来解决包的发布和获取需求。 Node.js 的包是一个目录，其中包含一个 JSON 格式的包说明文件 package.json。严格符合 CommonJS 规范的包应该具备以下特征： 
@@ -374,6 +607,8 @@ module.exports 来改变访问接口。
      文档应该在 doc 目录下；  
      单元测试应该在 test 目录下。 
 Node.js 对包的要求并没有这么严格，只要顶层目录下有 package.json，并符合一些规范即可。当然为了提高兼容性，我们还是建议你在制作包的时候，严格遵守 CommonJS 规范。  
+
+
 1. 作为文件夹的模块 
 模块与文件是一一对应的。文件不仅可以是 JavaScript 代码或二进制代码，还可以是一个文件夹。最简单的包，就是一个作为文件夹的模块。下面我们来看一个例子，建立一个叫做 somepackage 的文件夹，在其中创建 index.js，内容如下： 
 //somepackage/index.js 
@@ -724,7 +959,7 @@ server.on('request',function(req,res){
 
 
 
-
+### 
 
 
 
