@@ -460,7 +460,7 @@ var 自定义变量名称 = require('模块')；
   - ~~~js
     module.exports = 'hello';
     拿到的就是字符串
-    
+
     module.exports = function(x,y){
         return x + y;
     }
@@ -635,18 +635,70 @@ b.js被加载了
     ~~~js
     // 如果是非路径形式的模块标识
     var fs = require('fs');
+
+    // 核心模块  本质也是文件。
+    // 核心文件已经被编译到了二进制文件中，我们只需要按照名字来加载就可以了。
+
+    .js 可以省略：require('./foo') == require('./foo.js') 
     ~~~
 
   - 第三方模块
 
+    ~~~js
+     第三方模块
+     凡是第三方模块必须通过npm来下载
+     使用的时候就可以通过require('包名')的方式来进行加载才可以使用。
+     不可能有任何一个第三方和核心模块的名字是一样的。
+     既不是核心模块，也不是路径模块
+    		先找当前文件所处的目录的node_modules目录，
+    		然后找node_modules/art-template目录
+    		再找node_modules/art-template/package.json
+     		再找node_modules/art-template/package.json文件中的main属性。
+     		main属性中就记录了当前模块（art-template）的入口模块。
+     		然后加载使用这个第三方包，实际上最终加载的还是文件。
+
+     	如果package.json文件不存在或者main指定的入口模块是错的，
+        则node会默认自动找该目录下index.js,也就是说index.js会作为一个默认备选项。
+
+     	如果以上所有任何一个条件都不成立，则会进入上一级目录中的node_modules目录执行查找。
+     	如果上一级没有，则往上上一级查找
+      。。。。
+     	如果直到当前磁盘根目录还找不到，最后报错。can not find module.
+
+     	注意：我们的一个项目中有且仅有一个node_modules目录，不会出现多个。
+     			放在项目的根目录中，这样的话项目中的所有的子目录的代码都可以加载到第三方包。
+    var template = require('art-template');
+    ~~~
+
+    ​
+
   - 用户自定义模块
 
+    ~~~js
 
+    // 路径形式的模块
+       		./		当前目录，不可省略
+     		../		上一级目录，不可省略		
+     		/xxx	几乎不用		首位的/在这里表示的是当前文件模块所属磁盘根路径	
+     		D:a/b/	几乎不用
+    ~~~
 
+    ​
 
+    ![](image/modules.png)
 
+    ~~~js
+    blog
+    	|-a
+    		|-node-modules
+    			|-art-template
+    	|-b
+    		
+    		a中的第三包是不能通过require('art-template')方式进行加载。
+             可以这样：require('../a/node-modules/art-template/index.js')
+    ~~~
 
-
+    ​
 
 
 ### 5.3创建包 
@@ -699,6 +751,160 @@ package.json 是 CommonJS 规定的用来描述包的文件，完全符合规范
       repositories：仓库托管地址数组，每个元素要包含  type  （仓库的类型，如 git ）、url （仓库的地址）和 path （相对于仓库的路径，可选）字段。 
 	  dependencies：包的依赖，一个关联数组，由包名称和版本号组成。	
 ~~~
+
+### 5.4 npm
+
+- node package manager
+
+#### 5.4.1 npm网站
+
+> npmjs.com
+
+#### 5.4.2 npm命令行工具
+
+npm 第二层含义就是一个命令行工具，只要安装了node，就已经安装了npm。
+
+npm也有版本概念：
+
+~~~shell
+C:\Users\ooyhao>npm --version
+6.4.1
+~~~
+
+可以升级npm(自己升级自己)
+
+~~~shell
+npm install --global npm
+~~~
+
+#### 5.4.3 npm 常用命令
+
+- npm init 
+  - npm init -y 可以跳过向导，快速生成。
+- npm install  
+  - 一次性包package.json中的`dependencies`中的依赖项全部安装。
+  - 简写：npm i
+- npm install 包名
+  - 只下载指定包
+  - 简写：npm i 包名
+- npm install --save 包名 == npm install 包名 --save
+  - 下载并把依赖保存到package.json中`dependencies`中
+  - 简写：npm i --S 包名
+- npm uninstall 包名
+  - 只删除，如果有依赖项会依然保留。
+  - 简写：npm un 包名
+- npm uninstall --save 包名
+  - 删除的同时会把依赖信息删除。
+  - 简写：npm un -S 包名
+- npm --help
+  - 查看使用帮助
+- npm 命令 --help
+  - 查看指定命令的使用帮助（npm un --help）
+
+#### 5.4.4 解决npm被墙问题
+
+npm存储包文件的服务器在国外，有时候会被墙，速度很慢。
+
+http://npm.taobao.org/ 淘宝的开发团队把npm在国内做了一个备份。
+
+![](image/cnpm.png)
+
+安装淘宝的cnpm:
+
+~~~shell
+#在任意目录下执行都可以
+# --global 表示安装到全局，而不是当前目录，所有在哪里执行都可以
+# --global 不可以省略，否则不管用 
+npm install --global cnpm
+~~~
+
+接下来安装包的时候把之前的`npm`替换成`cnpm `。
+
+举个例子：
+
+~~~shell
+#访问的是国外的服务器
+npm install query
+# 使用cnpm就会使用淘宝的服务器下载jQuery
+cnpm install query
+~~~
+
+如果不想安装`cnpm`但是想使用淘宝的服务器来下载：
+
+~~~shell
+npm install jquery --registry=https://registry.npm.taobao.org
+~~~
+
+但是每一次手动这样加参数很麻烦，所以我们可以把这个选项加入到配置文件中：
+
+~~~shell
+npm config set registry https://registry.npm.taobao.org
+
+#查看npm 配置信息
+npm config list
+~~~
+
+只要经过上面命令的配置，则以后所有的`npm install`都会默认淘宝服务器下载。
+
+
+
+### 5.5 package.json
+
+#### 5.5.1 npm init
+
+我们建议每一个项目都有一个`package.json`文件，（包描述文件，就像产品说明书一样）
+
+这个文件可以通过`npm init`的方式自动初始化出来。
+
+![](image/npm_init.png)
+
+package.json
+
+~~~json
+{
+  "name": "npm-demo",
+  "version": "0.0.1",
+  "description": "a test project",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "ouYang",
+  "license": "ISC"
+}
+~~~
+
+#### 5.5.2 npm install --save 包名
+
+![](image/npm_save.png)
+
+package.json
+
+~~~json
+{
+  "name": "npm-demo",
+  "version": "0.0.1",
+  "description": "a test project",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "ouYang",
+  "license": "ISC",
+  "dependencies": {
+    "jquery": "^3.3.1"
+  }
+}
+~~~
+
+对于我们现在来说，最有用的就是`dependencies`选项，可以帮我们保存第三方包的信息。
+
+如果`node_modules`删除了，我们只需：`npm install`就会自动把`package.json`中的依赖项`dependencies`中所有的依赖都下载回来。
+
+- 建议：每一个项目的根目录下都有一个`package.json`文件。
+- 建议：执行`npm install 报名`的时候加上`--save`这个选项、目的是用来保存依赖项的信息。
+
+
 
 ## 6.解决编码问题
 
@@ -1011,7 +1217,23 @@ server.on('request',function(req,res){
 
 
 
-### 
+## 8.Express
+
+原生的http在某些方面表现的不足以应对我们的开发需求，所以我们就需要使用框架来加快我们的开发效率，框架的目的就是提高效率，让我们的代码高度统一。
+
+在Node中有很多web开发框架，我们这里以学习express为主。
+
+http://expressjs.com/ express官网首页。
+
+![](image/expressInstall.png)
+
+通过以下网址进行访问hello-world页面：
+
+~~~js
+http://expressjs.com/en/starter/hello-world.html
+~~~
+
+![](image/express-hello-world.png)
 
 
 
