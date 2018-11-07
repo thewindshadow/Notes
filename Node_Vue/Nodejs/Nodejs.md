@@ -581,13 +581,65 @@ new
 
 ### 5.2 require的加载规则
 
-- 优先从缓存加载
+#### 5.2.1 优先从缓存加载
 
-  ~~~js
-  
-  ~~~
+- a.js
 
-  
+~~~js
+console.log('a.js被加载了');
+var fn = require('./b.js');
+console.log(fn);
+~~~
+
+- b.js
+
+~~~js
+console.log('b.js被加载了');
+
+module.exports = function(){
+	console.log('Hello Nodejs');
+}
+~~~
+
+- main.js
+
+~~~js
+//优先从缓存中加载
+//由于a.js中已经加载了b.js,所以在main.js中不会重复加载
+// 可以拿到其中的接口对象，但不会重复去执行代码。
+// 这样做的目的是为了避免重复加载，提高模块加载效率。
+
+require('./a.js');
+var fn = require('./b.js');
+
+console.log(fn);
+
+~~~
+
+结果：
+
+~~~shell
+D:\Node_Vue\Node\day03\03-require优先从缓存中加载>node main.js
+a.js被加载了
+b.js被加载了
+[Function]
+[Function]
+~~~
+
+#### 5.2.2 模块标识符
+
+- 判断模块标识符
+
+  - 核心模块
+
+    ~~~js
+    // 如果是非路径形式的模块标识
+    var fs = require('fs');
+    ~~~
+
+  - 第三方模块
+
+  - 用户自定义模块
 
 
 
