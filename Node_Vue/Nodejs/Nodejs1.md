@@ -48,6 +48,10 @@ app.listen(3333,function(){
 
 
 
+## 
+
+
+
 
 
 
@@ -315,6 +319,30 @@ app.listen(3333,function(){
 
 
  
+
+## 9.1修改代码自动重启
+
+我们这里可以使用一个第三方命令行工具，`nodemon`来帮我们解决频繁修改代码重启服务器问题。
+
+`nodemon`是一个基于nodejs开发，我们需要独立安装。
+
+~~~shell
+npm install --global nodemon
+~~~
+
+安装完之后，使用nodemon就可以：
+
+~~~shell
+node app.js
+V
+nodemon app.js
+~~~
+
+只要是通过`nodemon app.js`启动服务，则它会监视我们的文件的变化，当文件发生变化的时候，会自动帮我们重启服务器。
+
+![](image/auto_restart.png)
+
+
 
 
 
