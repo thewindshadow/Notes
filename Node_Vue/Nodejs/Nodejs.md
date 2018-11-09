@@ -1,5 +1,7 @@
 # Nodejs
 
+[TOC]
+
 ## 1.说在前面的：
 
 ### 1.简介
@@ -1231,7 +1233,7 @@ server.on('request',function(req,res){
   		console.log(data.toString());
   	}
   });
-  
+
   //(绝对路劲) 到当前文件所在的磁盘根目录下找data/a.txt; 即：C:data/a.txt;
   fs.readFile('/data/a.txt',function(error,data){
   	if(error){
@@ -1242,18 +1244,16 @@ server.on('request',function(req,res){
   });
   ~~~
 
-  
 
 - 模块操作路径
 
   ~~~js
   //磁盘根目录(忽略了点（.）)
   var foo = require('/data/foo.js');
-  
-  
+
+
   //文件从操纵的API是异步操作。
   //模块 ./是不可省略的
   var foo = require('./data/foo.js');
   ~~~
 
-  

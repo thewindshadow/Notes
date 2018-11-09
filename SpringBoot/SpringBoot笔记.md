@@ -1,4 +1,8 @@
-1.SpringBoot基础
+# SpringBoot基础
+
+[TOC]
+
+
 
 ## 1.@Configuration，@ComponentScan，@Bean
 
@@ -43,7 +47,6 @@ public class User {
     }
 
 }
-
 ```
 
 模拟连接数据库取数据的DAO对象
@@ -692,13 +695,13 @@ public class Person {
 
 ### 2.只用@Value进行获取
 
-|                     | @ConfigurationProperties    | @Value     |
-| ------------------- | --------------------------- | ---------- |
-| 功能                | 批量注入配置文件中的属性    | 一个个指定 |
-| 松散绑定            | 支持（lastName与last-name） | 不支持     |
-| SpEL                | 不支持                      | 支持       |
-| JSR303数据校验      | 支持                        | 不支持     |
-| 复制类似封装（map） | 支持                        | 不支持     |
+|             | @ConfigurationProperties | @Value |
+| ----------- | ------------------------ | ------ |
+| 功能          | 批量注入配置文件中的属性             | 一个个指定  |
+| 松散绑定        | 支持（lastName与last-name）   | 不支持    |
+| SpEL        | 不支持                      | 支持     |
+| JSR303数据校验  | 支持                       | 不支持    |
+| 复制类似封装（map） | 支持                       | 不支持    |
 
 复杂类型封装不支持map但是支持list
 
@@ -1256,20 +1259,20 @@ public class HttpEncodingProperties {
 
 作用：必须是@Conditional指定的条件成立，才给容器添加该组件，配置类里面的所有内容才生效。
 
-| @Conditional扩展注解            | 作用（判断是否满足当前指定条件）                 |
-| ------------------------------- | ------------------------------------------------ |
-| @ConditionalOnJava              | 系统的java版本是否符合要求                       |
-| @ConditionalOnBean              | 容器中存在指定Bean；                             |
-| @ConditionalOnMissingBean       | 容器中不存在指定Bean；                           |
-| @ConditionalOnExpression        | 满足SpEL表达式指定                               |
-| @ConditionalOnClass             | 系统中有指定的类                                 |
-| @ConditionalOnMissingClass      | 系统中没有指定的类                               |
+| @Conditional扩展注解                | 作用（判断是否满足当前指定条件）               |
+| ------------------------------- | ------------------------------ |
+| @ConditionalOnJava              | 系统的java版本是否符合要求                |
+| @ConditionalOnBean              | 容器中存在指定Bean；                   |
+| @ConditionalOnMissingBean       | 容器中不存在指定Bean；                  |
+| @ConditionalOnExpression        | 满足SpEL表达式指定                    |
+| @ConditionalOnClass             | 系统中有指定的类                       |
+| @ConditionalOnMissingClass      | 系统中没有指定的类                      |
 | @ConditionalOnSingleCandidate   | 容器中只有一个指定的Bean，或者这个Bean是首选Bean |
-| @ConditionalOnProperty          | 系统中指定的属性是否有指定的值                   |
-| @ConditionalOnResource          | 类路径下是否存在指定资源文件                     |
-| @ConditionalOnWebApplication    | 当前是web环境                                    |
-| @ConditionalOnNotWebApplication | 当前不是web环境                                  |
-| @ConditionalOnJndi              | JNDI存在指定项                                   |
+| @ConditionalOnProperty          | 系统中指定的属性是否有指定的值                |
+| @ConditionalOnResource          | 类路径下是否存在指定资源文件                 |
+| @ConditionalOnWebApplication    | 当前是web环境                       |
+| @ConditionalOnNotWebApplication | 当前不是web环境                      |
+| @ConditionalOnJndi              | JNDI存在指定项                      |
 
 **自动配置类必须在一定的条件下才能生效；**
 
@@ -1352,8 +1355,8 @@ Unconditional classes:
 
 JUL、JCL、Jboss-logging、logback、log4j、log4j2、slf4j....
 
-| 日志门面  （日志的抽象层）                                   | 日志实现                                             |
-| ------------------------------------------------------------ | ---------------------------------------------------- |
+| 日志门面  （日志的抽象层）                           | 日志实现                                     |
+| ---------------------------------------- | ---------------------------------------- |
 | ~~JCL（Jakarta  Commons Logging）~~    SLF4j（Simple  Logging Facade for Java）    **~~jboss-logging~~** | Log4j  JUL（java.util.logging）  Log4j2  **Logback** |
 
 左边选一个门面（抽象层）、右边来选一个实现；
@@ -1541,11 +1544,11 @@ logging.pattern.console=%d{yyyy-MM-dd} [%thread] %-5level %logger{50} - %msg%n
 logging.pattern.file=%d{yyyy-MM-dd} === [%thread] === %-5level === %logger{50} ==== %msg%n
 ```
 
-| logging.file | logging.path | Example  | Description                        |
-| ------------ | ------------ | -------- | ---------------------------------- |
-| (none)       | (none)       |          | 只在控制台输出                     |
-| 指定文件名   | (none)       | my.log   | 输出日志到my.log文件               |
-| (none)       | 指定目录     | /var/log | 输出到指定目录的 spring.log 文件中 |
+| logging.file | logging.path | Example  | Description             |
+| ------------ | ------------ | -------- | ----------------------- |
+| (none)       | (none)       |          | 只在控制台输出                 |
+| 指定文件名        | (none)       | my.log   | 输出日志到my.log文件           |
+| (none)       | 指定目录         | /var/log | 输出到指定目录的 spring.log 文件中 |
 
 ### 2.指定配置
 
@@ -1555,11 +1558,11 @@ logging.pattern.file=%d{yyyy-MM-dd} === [%thread] === %-5level === %logger{50} =
 
 ![1539493233861](pic/myLog2.png)
 
-| Logging System          | Customization                                                |
-| ----------------------- | ------------------------------------------------------------ |
+| Logging System          | Customization                            |
+| ----------------------- | ---------------------------------------- |
 | Logback                 | `logback-spring.xml`, `logback-spring.groovy`, `logback.xml` or `logback.groovy` |
-| Log4j2                  | `log4j2-spring.xml` or `log4j2.xml`                          |
-| JDK (Java Util Logging) | `logging.properties`                                         |
+| Log4j2                  | `log4j2-spring.xml` or `log4j2.xml`      |
+| JDK (Java Util Logging) | `logging.properties`                     |
 
 logback.xml：直接就被日志框架识别了；
 
@@ -2589,24 +2592,24 @@ public class MyMvcConfig implements WebMvcConfigurer{
 
 URI：/资源名称/资源标识 HTTP请求方式区分对资源CRUD操作
 
-|      | 普通CRUD              | RestfulCRUD      |
+|      | 普通CRUD                | RestfulCRUD      |
 | ---- | --------------------- | ---------------- |
-| 查询 | getEmp                | emp--GET         |
-| 添加 | addEmp?xxx            | emp--POST        |
-| 修改 | update?id=xxx&xxx=xxx | emp/{id}--PUT    |
-| 删除 | deleteEmp?id=1        | emp/{id}--DELETE |
+| 查询   | getEmp                | emp--GET         |
+| 添加   | addEmp?xxx            | emp--POST        |
+| 修改   | update?id=xxx&xxx=xxx | emp/{id}--PUT    |
+| 删除   | deleteEmp?id=1        | emp/{id}--DELETE |
 
 ### 2)、实验的请求架构
 
-|                                  | 请求的URI | 请求方式 |
-| -------------------------------- | --------- | -------- |
-| 查询所有员工                     | emps      | GET      |
-| 查询某个员工                     | emp/1     | GET      |
-| 来到添加页面                     | emp       | GET      |
-| 添加员工                         | emp       | POST     |
-| 来到修改页面（查询员工信息回显） | emp/1     | GET      |
-| 修改员工                         | emp       | PUT      |
-| 删除员工                         | emp/1     | DELETE   |
+|                  | 请求的URI | 请求方式   |
+| ---------------- | ------ | ------ |
+| 查询所有员工           | emps   | GET    |
+| 查询某个员工           | emp/1  | GET    |
+| 来到添加页面           | emp    | GET    |
+| 添加员工             | emp    | POST   |
+| 来到修改页面（查询员工信息回显） | emp/1  | GET    |
+| 修改员工             | emp    | PUT    |
+| 删除员工             | emp/1  | DELETE |
 
 ### 3)员工列表
 
@@ -3704,12 +3707,12 @@ systemctl stop docker
 
 ### 1）、镜像操作
 
-| 操作 | 命令                                            | 说明                                                     |
-| ---- | ----------------------------------------------- | -------------------------------------------------------- |
-| 检索 | docker  search 关键字  eg：docker  search redis | 我们经常去docker  hub上检索镜像的详细信息，如镜像的TAG。 |
-| 拉取 | docker pull 镜像名:tag                          | :tag是可选的，tag表示标签，多为软件的版本，默认是latest  |
-| 列表 | docker images                                   | 查看所有本地镜像                                         |
-| 删除 | docker rmi image-id                             | 删除指定的本地镜像                                       |
+| 操作   | 命令                                       | 说明                                  |
+| ---- | ---------------------------------------- | ----------------------------------- |
+| 检索   | docker  search 关键字  eg：docker  search redis | 我们经常去docker  hub上检索镜像的详细信息，如镜像的TAG。 |
+| 拉取   | docker pull 镜像名:tag                      | :tag是可选的，tag表示标签，多为软件的版本，默认是latest  |
+| 列表   | docker images                            | 查看所有本地镜像                            |
+| 删除   | docker rmi image-id                      | 删除指定的本地镜像                           |
 
 https://hub.docker.com/
 
@@ -4825,5 +4828,4 @@ public class StudentController {
 
 源码：[Github仓库](https://github.com/ooyhao/SpringBoot_Restful_Swagger2)
 
-
-
+# 
