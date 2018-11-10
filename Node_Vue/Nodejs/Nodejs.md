@@ -907,6 +907,19 @@ package.json
 - 建议：执行`npm install 报名`的时候加上`--save`这个选项、目的是用来保存依赖项的信息。
 
 
+#### 5.5.3 package.json 和 package-lock.json
+
+npm 5之前是不会生成package-lock.json,之后加入了这个文件，当安装包的时候，npm都会生成或者更新`package-lock.json`文件。
+
+- 5之后的npm版本，在安装包的时候，不加入`--save`也会自动把依赖项加入到package.json文件中。
+
+- 当安装包之后，会自动创建或者更新package-lock.json.
+
+- `package-lock.json`这个文件会保存`node_modules`中所有包的信息，（版本信息，下载地址）。
+
+  重新`npm install`的时候速度就提升了。
+
+- 从文件来看，有一个lock，称为锁，如果项目依赖了`1.11.1`版本，没有package-lock.json文件时，会下载最新的版本，但是有package-lock.json只会下载指定版本，不会自动进行升级。
 
 ## 6.解决编码问题
 
@@ -1250,6 +1263,7 @@ server.on('request',function(req,res){
   ~~~js
   //磁盘根目录(忽略了点（.）)
   var foo = require('/data/foo.js');
+  ~~~
 
 
   //文件从操纵的API是异步操作。
@@ -1257,3 +1271,5 @@ server.on('request',function(req,res){
   var foo = require('./data/foo.js');
   ~~~
 
+
+  ~~~
