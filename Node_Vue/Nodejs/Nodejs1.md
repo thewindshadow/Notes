@@ -127,78 +127,78 @@ var paramsObj = request.query
 -    7.编写app.js,放在项目根本下
 
      ~~~js
-              //引入第三方模块
-              var express = require('express');
-              var bodyParser = require('body-parser');
-              //创建app
-              var app = express();
-              //指定公开访问路径
-              app.use('/public/',express.static('./public/'));
-              //配置art-template模板引擎
-              app.engine('html',require('express-art-template'));
-              //app监听指定端口号
-              app.listen(3333,function(){
-              	console.log('app is running at port 3333');
-              });
-              /*配置body-parser中间件*/
-              app.use(bodyParser.urlencoded({extends:false}));
-              app.use(bodyParser.json()); 	
+                 //引入第三方模块
+                 var express = require('express');
+                 var bodyParser = require('body-parser');
+                 //创建app
+                 var app = express();
+                 //指定公开访问路径
+                 app.use('/public/',express.static('./public/'));
+                 //配置art-template模板引擎
+                 app.engine('html',require('express-art-template'));
+                 //app监听指定端口号
+                 app.listen(3333,function(){
+                 	console.log('app is running at port 3333');
+                 });
+                 /*配置body-parser中间件*/
+                 app.use(bodyParser.urlencoded({extends:false}));
+                 app.use(bodyParser.json()); 	
 
-              //定义用于数据仓库
-              var comments = [
-              	{
-              		name:'贾宝玉',
-              		message:'你好啊！',
-              		dateTime:'2018-11-01 11:11:11'
-              	},{
-              		name:'林黛玉',
-              		message:'你好啊！',
-              		dateTime:'2018-11-02 11:11:11'
-              	},{
-              		name:'薛宝钗',
-              		message:'你好啊！',
-              		dateTime:'2018-11-03 11:11:11'
-              	},{
-              		name:'袭人',
-              		message:'你好啊！',
-              		dateTime:'2018-11-04 11:11:11'
-              	},{
-              		name:'晴雯',
-              		message:'你好啊！',
-              		dateTime:'2018-11-05 11:11:11'
-              	},
-              ];
-              //配置访问路由
-              app.get('/',function(req,res){
+                 //定义用于数据仓库
+                 var comments = [
+                 	{
+                 		name:'贾宝玉',
+                 		message:'你好啊！',
+                 		dateTime:'2018-11-01 11:11:11'
+                 	},{
+                 		name:'林黛玉',
+                 		message:'你好啊！',
+                 		dateTime:'2018-11-02 11:11:11'
+                 	},{
+                 		name:'薛宝钗',
+                 		message:'你好啊！',
+                 		dateTime:'2018-11-03 11:11:11'
+                 	},{
+                 		name:'袭人',
+                 		message:'你好啊！',
+                 		dateTime:'2018-11-04 11:11:11'
+                 	},{
+                 		name:'晴雯',
+                 		message:'你好啊！',
+                 		dateTime:'2018-11-05 11:11:11'
+                 	},
+                 ];
+                 //配置访问路由
+                 app.get('/',function(req,res){
 
-              	res.render('index.html',{
-              		comments:comments
-              	});
-              });
+                 	res.render('index.html',{
+                 		comments:comments
+                 	});
+                 });
 
-              app.get('/post',function(req,res){
-              	res.render('post.html');
-              });
+                 app.get('/post',function(req,res){
+                 	res.render('post.html');
+                 });
 
-              app.post('/post',function(req,res) {
-              	//通过req.body的方式获得post方式的表单请求数据。
-                  var comment = req.body;
-              	comment.dateTime = getNow();
-              	comments.unshift(comment);
-              	res.redirect('/');
-              });
-              //获得当前时间
-              function getNow(){
-              	var date = new Date();
-              	var year = date.getFullYear();
-              	var month = (date.getMonth()+1)>9?(date.getMonth()+1):'0'+(date.getMonth()+1);
-              	var day = date.getDate()>9?date.getDate():'0'+date.getDate();
-              	var hour = date.getHours()>9?date.getHours():'0'+date.getHours();
-              	var minute = date.getMinutes()>9?date.getMinutes():'0'+date.getMinutes();
-              	var second = date.getSeconds()>9?date.getSeconds():'0'+date.getSeconds();
+                 app.post('/post',function(req,res) {
+                 	//通过req.body的方式获得post方式的表单请求数据。
+                     var comment = req.body;
+                 	comment.dateTime = getNow();
+                 	comments.unshift(comment);
+                 	res.redirect('/');
+                 });
+                 //获得当前时间
+                 function getNow(){
+                 	var date = new Date();
+                 	var year = date.getFullYear();
+                 	var month = (date.getMonth()+1)>9?(date.getMonth()+1):'0'+(date.getMonth()+1);
+                 	var day = date.getDate()>9?date.getDate():'0'+date.getDate();
+                 	var hour = date.getHours()>9?date.getHours():'0'+date.getHours();
+                 	var minute = date.getMinutes()>9?date.getMinutes():'0'+date.getMinutes();
+                 	var second = date.getSeconds()>9?date.getSeconds():'0'+date.getSeconds();
 
-              	return year+'-'+month+'-'+day+' '+hour+':'+minute+':'+second;
-              }
+                 	return year+'-'+month+'-'+day+' '+hour+':'+minute+':'+second;
+                 }
      ~~~
 
 
@@ -259,26 +259,26 @@ var paramsObj = request.query
 -    9.编写post.html文件，放在项目根路径下的views文件夹下
 
      ~~~html
-                    <!DOCTYPE html>
-                    <html lang="en">
+                       <!DOCTYPE html>
+                       <html lang="en">
 
-                    <head>
-                      <meta charset="UTF-8">
-                      <title>Document</title>
-                      <link rel="stylesheet" href="/public/lib/bootstrap/css/bootstrap.css">
-                    </head>
+                       <head>
+                         <meta charset="UTF-8">
+                         <title>Document</title>
+                         <link rel="stylesheet" href="/public/lib/bootstrap/css/bootstrap.css">
+                       </head>
 
-                    <body>
-                      <div class="header container">
-                        <div class="page-header">
-                          <h1><a href="/">首页</a> <small>发表评论</small></h1>
-                        </div>
-                      </div>
-                      <div class="comments container">
-                        <!-- 
-                          以前表单是如何提交的？
-                          表单中需要提交的表单控件元素必须具有 name 属性
-                          表单提交分为：
+                       <body>
+                         <div class="header container">
+                           <div class="page-header">
+                             <h1><a href="/">首页</a> <small>发表评论</small></h1>
+                           </div>
+                         </div>
+                         <div class="comments container">
+                           <!-- 
+                             以前表单是如何提交的？
+                             表单中需要提交的表单控件元素必须具有 name 属性
+                             表单提交分为：
      1. 默认的提交行为
      2. 表单异步提交
 
@@ -307,35 +307,35 @@ var paramsObj = request.query
 -    10.总结
 
      ~~~js
-                 // 处理请求（都会自动结束响应）
-                   res.redirect([status,] path) 用于重定向
-                   res.render(view [, locals] [, callback])  返回视图
-                   res.send([body])   返回http响应
-                   
-                   
-               app.engine('html',require('express-art-template')); // 配置模板引擎。
-               
-               // 配置body-parser 中间件（插件，专门用于解析post请求体）
-               app.use(bodyParser.urlencoded({extends:false}));
-               app.use(bodyParser.json());
+                    // 处理请求（都会自动结束响应）
+                      res.redirect([status,] path) 用于重定向
+                      res.render(view [, locals] [, callback])  返回视图
+                      res.send([body])   返回http响应
+                      
+                      
+                  app.engine('html',require('express-art-template')); // 配置模板引擎。
+                  
+                  // 配置body-parser 中间件（插件，专门用于解析post请求体）
+                  app.use(bodyParser.urlencoded({extends:false}));
+                  app.use(bodyParser.json());
 
-               //开放公共资源
-               app.use('/public/',express.static('./public/'));
+                  //开放公共资源
+                  app.use('/public/',express.static('./public/'));
 
-               //获得post请求中的请求体中的参数，使用req.body;req.query只能拿到get请求的参数
-               app.post('/post',function(req,res){
-                 var comment = req.body;
-                 comment.dateTime = getNow();
-                 comments.unshift(comment);
-                 res.redirect('/');
-               });
+                  //获得post请求中的请求体中的参数，使用req.body;req.query只能拿到get请求的参数
+                  app.post('/post',function(req,res){
+                    var comment = req.body;
+                    comment.dateTime = getNow();
+                    comments.unshift(comment);
+                    res.redirect('/');
+                  });
      ~~~
 
 -    效果图：
 
-              ![](image/feedback_home.png)
+                 ![](image/feedback_home.png)
 
-              ![](image/feedback_post.png)
+                 ![](image/feedback_post.png)
 
 ### 8.7 使用Express基于Json文件 实现CRUD
 
@@ -1917,7 +1917,6 @@ var userSchema = new Schema({
 //		第二个参数：结构schema.
 //		返回值：模型构造函数
 var User = mongoose.model('User', userSchema);
-
 ~~~
 
 ###### 3.2 增加数据
@@ -2303,6 +2302,371 @@ pReadFile('./a.txt')
 
 
 
+## 13 Path 路径操作模块
+
+- path.basename  获取一个文件名（包含扩展名）
+- path.dirname （获取一个路径中的目录部分）
+- path.extname  （获取一个文件的扩展名）
+- path.parse  （将路径转为一个对象（包含root，dir，base，ext，name ））
+  - root 根路径
+  - dir 目录
+  - base 包含后缀名的文件名
+  - ext 后缀名
+  - name 不包含后缀名的文件名
+- path.join 当需要拼接地址的时候。
+- path.isAbsolute 判断一个路径是否为绝对路径
+
+## 14 Node中的其他成员
+
+在每个模块中，除了exports，require，等模块相关的API之外，还有两个特殊的成员。
+
+- __dirname 可以用来动态获取当前文件模块所属目录的绝对路径。
+  - D:\Node_Vue\Node\day06\code
+
+- __filename 可以用来动态获取当前文件的绝对路径。
+  - D:\Node_Vue\Node\day06\code\demo01.js
+
+~~~js
+var fs = require('fs');
+// ./a.txt 相对于执行node命令所处的终端路径
+// 文件操作路径中，相对路径设计的就是相对于执行node命令所处的路径。
+fs.readFile('./a.txt',function(err,data){
+  if(err){
+    throw err;
+  }
+  console.log(data);
+});
+
+~~~
+
+在文件操作中，使用相对路径是不可靠的，因为在node中，文件操作的路径被设计为相对于执行node命令所处的路径。（不是错误，人家设计是有使用场景的）
+
+所以解决这个问题：只需要把相对路径变成绝对路径.。
+
+那这里我们就可以使用`__filenam`或者`__dirname`来帮我们解决这个问题。
+
+~~~js
+var fs = require('fs');
+fs.readFile(path.join(__dirname+'/a.txt'),function(err,data){
+  if(err){
+    throw err;
+  }
+  console.log(data);
+});
+~~~
+
+在拼接路径的过程中，为了避免手动拼接带来的一些低级错误，所以推荐多使用：path.join，来辅助拼接。
+
+所以以后在文件操作中使用的相对路径尽量统一转换为动态的绝对路径。
+
+（补充：模块中的路径标识和这里的路径没有关系，不受影响。相对于文件模块）。
+
+* 模块中的路径标识和文件中的相对路径标识是不一致的，模块中的路径标识就是相对于当前模块，
+
+  不受node命令执行的所处路径影响。
+
+
+
+## 15 Blog
+
+### 15.1 art-template布局
+
+header.html
+
+~~~html
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+	Header
+</body>
+</html>
+~~~
+
+footer.html
+
+~~~html
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+	Footer
+</body>
+</html>
+~~~
+
+layout.html
+
+~~~html
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="/node_modules/bootstrap/dist/css/bootstrap.css">
+	{{block 'head'}}
+
+	{{/block}}
+</head>
+<body>
+	{{include './header.html'}}
+	{{ block 'content'}}
+
+	<h1>默认内容</h1>
+	{{ /block}}
+	{{include './footer.html'}}
+
+	<script type="text/javascript" src="/node_modules/bootstrap/dist/js/bootstrap.js"></script>
+	<script type="text/javascript" src="/node_modules/jquery/dist/jquery.js"></script>
+
+	{{block 'script'}}
+	{{/block}}
+</body>
+</html>
+~~~
+
+index.html
+
+~~~html
+{{extend './layout.html'}}
+
+{{block 'head'}}
+<style type="text/css">
+	body{
+		background-color: #ccc;
+	}
+</style>
+{{/block}}
+
+{{block 'content'}}
+	<div>
+		<h1>覆盖内容</h1>
+	</div>
+
+{{/block}}
+
+
+{{block 'script'}}
+	<script type="text/javascript">
+		window.alert('index page');
+	</script>
+{{/block}}
+~~~
+
+![](image/layout_result.png)
+
+
+
+### 15.2 路由设计
+
+| 路径        | 方法   | get参数 | post参数                  | 是否需要登录权限 | 备注     |
+| --------- | ---- | ----- | ----------------------- | -------- | ------ |
+| /         | get  |       |                         |          | 渲染首页   |
+| /register | get  |       |                         |          | 渲染注册页面 |
+| /register | post |       | email,nickname,password |          | 处理注册请求 |
+| /login    | get  |       |                         |          | 渲染登录页面 |
+| /login    | get  |       | email,password          |          | 处理登录请求 |
+| /logout   | get  |       |                         |          | 处理退出请求 |
+
+
+
+### 15.3 表单的同步提交与异步提交
+
+(服务端重定向针对异步请求无效)
+
+~~~js
+表单具有默认的提交行为，默认是同步的，同步表单提交，浏览器会锁死（转圈儿）等待服务端的响应结果。
+表单的同步提交之后，无论服务端响应的是什么，都会直接把响应的结果覆盖掉当前页面。
+~~~
+
+~~~js
+<script>
+    $('#register_form').on('submit', function (e) {
+      //先阻止默认事件
+      e.preventDefault();
+      //表单序列化
+      var formData = $(this).serialize();
+      $.ajax({
+        url: '/register',
+        type: 'post',
+        data: formData,
+        dataType: 'json',
+
+        success: function (data) {
+          var err_code = data.err_code
+          if (err_code === 0) {
+            window.alert('注册成功！')
+            // 服务端重定向针对异步请求无效
+            window.location.href = '/'
+          } else if (err_code === 1) {
+            window.alert('邮箱已存在！')
+          } else if (err_code === 2) {
+            window.alert('昵称已存在！')
+          } else if (err_code === 500) {
+            window.alert('服务器忙，请稍后重试！')
+          }
+        }
+      })
+    })
+  </script>
+~~~
+
+### 15.4 Express中使用express-session
+
+使用express-session第三方包。https://www.npmjs.com/package/express-session
+
+- 安装
+
+  ~~~shell
+  npm install --save express-session
+  ~~~
+
+- 引入
+
+  ~~~js
+  var session = require('express-session');
+  ~~~
+
+- 配置
+
+  ~~~js
+  app.use(session({
+  	//配置加密字符串，它会在原有加密基础之上和这个字符串拼起来去加密
+  	//目的是为了增加安全性
+  	secret:'keyboard cat',
+  	resave:false,
+  	//无论是否使用session，都默认直接给一个sessionId
+  	saveUninitialized:true
+  }));
+  ~~~
+
+- 使用
+
+  ~~~js
+  //	当把这个插件配置好之后，我们就可以通过req.session来访问和设置session的成员。
+  添加session数据  req.session.foo = 'bar';
+  访问session数据  var foo = req.session.foo;
+  ~~~
+
+  提示：默认session数据是内存存储的，服务器一旦重启就会丢失，一般真正的生产环境会把session进行持久化
+
+### 15.5 模块是独立的
+
+~~~js
+在Node中没有全局作用域，它是文件模块作用域，模块是独立，不能因为a加载了fs，b就不需要了，即使a中require b，这是错误的理解，正确的做法应该是 a需要fs则a就加载fs，b需要fs则b就加载fs。
+~~~
+
+### 15.6 中间件
+
+示例：
+
+~~~js
+var express = require('express');
+var app = express();
+//中间件：处理请求的，本质是一个函数
+//在Express中，对中间件有几种分类。
+
+//不关心请求路径和请求方法的中间件，
+// 也就是说任何请求都会进入这个中间件 
+
+app.use(function(req,res,next){
+	console.log('2 请求进来了。');
+	next();
+});
+
+app.use(function(req,res,next){
+	console.log('3 请求进来了。');
+});
+
+//以/开都就可以。
+app.use('/',function(req,res,next) {
+	console.log('1');
+	next();
+})
+//必须是get方式的请求，并且请求路径为/，而不是以/开头的
+app.get('/',function(req,res,next) {
+	console.log('1');
+	next();
+})
+
+//以 /xxx开头的路径中间件
+app.use('/a',function(req,res,next){
+	console.log(req.url);
+});
+
+
+app.listen(3333,function() {
+
+});
+~~~
+
+- 同一个请求所经过的中间件都是同一个请求对象和响应对象
+
+  ~~~js
+  //以/开都就可以。
+  app.use('/',function(req,res,next) {
+  	console.log('1');
+  	req.username = 'ouYang';
+  	next();
+  })
+  //以 /xxx开头的路径中间件
+  app.use('/a',function(req,res,next){
+  	console.log(req.username);//ouYang
+  	console.log(req.url);
+  });
+  ~~~
+
+
+- 中间件执行流程
+
+  ~~~js
+  //当请求进来，会从第一个中间件开始进行匹配
+  	//如果匹配，则进来
+  		//如果请求进入中间件之后，没调用next()则会停在当前中间件。
+  		//如果调用了next则会继续向后找到第一个中间件。
+  	//如果不匹配，则继续判断匹配下一个中间件
+  ~~~
+
+  ​
+
+
+- 中间件参数解释
+
+  ~~~js
+  //中间件本身是一个方法，该方法接收三个参数，
+  // 	Request 请求对象
+  //  Response 响应对象 
+  //  next  下一个中间件(调用下一个匹配的中间件)
+  app.use(function(req,res,next){
+  	console.log('1 请求进来了。');
+  	//当一个请求进入一个中间件之后，如果不调用next，则会停留在当前中间件。
+  	//所以next是一个方法，用来调用下一个中间件。
+  	next();
+  });
+  ~~~
+
+- app.get()&app.post()
+
+  ~~~js
+  // 如果没有匹配的中间件，express会默认输出can not get/post
+  //严格匹配请求方法和请求路径的中间件
+  /*app.get();
+  app.get('',function(req,res,next){})
+  app.post();*/
+  ~~~
+
+  ​
+
+### 15.7 使用中间件进行全局错误处理
+
+~~~js
+var express = require('express');
+var fs = require('fs');
+var app = express();
 
 
 
@@ -2311,13 +2675,45 @@ pReadFile('./a.txt')
 
 
 
+//以/开都就可以。
+app.get('/',function(req,res,next) {
+	fs.readFile('./a.txt',function(err,data){
+		if(err){
+			// return res.status(500).send('server error');
+			next();
+		}
+	});
+})
 
 
+//以/开都就可以。
+app.get('/',function(req,res,next) {
+	fs.readFile('./a.txt',function(err,data){
+		if(err){
+			// return res.status(500).send('server error');
+			//如果传递了参数，则直接去后面找四个参数的中间件。
+			next(err);
+		}
+	});
+});
 
+//以 /xxx开头的路径中间件
+app.get('/',function(req,res,next){
+	console.log(2);
+});
 
+//配置错误处理中间件
+app.use(function (err,req,res,next) {
+	console.log('保错了');
+    res.status(500).send(err.message)//或是返回一个4xx或5xx页面
+})
 
+app.listen(3333,function() {
 
+});
 
+//结果：报错了
+~~~
 
 
 
