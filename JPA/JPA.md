@@ -8,7 +8,7 @@ JavaEE5.0 平台标准的 ORM 规范，使得应用程序以统一的方式访�
 
 
 
-![](image/2018-10-22_211319.png)
+![](JPA/2018-10-22_211319.png)
 
 ## 2.JPA和Hibernate的关系
 
@@ -78,7 +78,7 @@ hibernate-release-4.2.4.Final\lib\jpa\*.jar
 数据库驱动的 jar 包
 ~~~
 
-![image/lib.png](image/lib.png)
+![JPA/lib.png](JPA/lib.png)
 
 ## 3.persistence.xml
 
@@ -122,13 +122,13 @@ hibernate-release-4.2.4.Final\lib\jpa\*.jar
 
 
 
-![](image/2018-10-22_212153.png)
+![](JPA/2018-10-22_212153.png)
 
 
 
 ## 4.执行持久化操作
 
-![1540214640877](image/op.png)
+![1540214640877](JPA/op.png)
 
 ## 5.代码
 
@@ -247,7 +247,7 @@ public class JPATest {
 
 结构图：
 
-![image/](image\construct.png)
+![JPA/](JPA/construct.png)
 
 
 
@@ -271,7 +271,7 @@ public class JPATest {
 
 ~~~
 
-![1540214784986](image/entity.png)
+![1540214784986](JPA/entity.png)
 
 ## 3.@Id
 
@@ -280,7 +280,7 @@ public class JPATest {
 @Id标注也可置于属性的getter方法之前。
 ~~~
 
-![1540214841919](image\id.png)
+![1540214841919](JPA/id.png)
 
 ## 4.@GeneratedValue
 
@@ -391,7 +391,7 @@ close()：关闭 EntityManagerFactory 。 EntityManagerFactory 关闭后将释�
 	据库记录。
 ~~~
 
-![1540219581121](image/merge.png)
+![1540219581121](JPA/merge.png)
 
 ~~~xml
 1.flush ()：同步持久上下文环境，即将持久上下文环境的所有未保存实体的状态信息保存到数据库中。
@@ -638,19 +638,19 @@ EntityTransaction 接口用来管理资源层实体管理器的事务操作。�
 
 ## 1.OneToMany & ManyToOne
 
-![](image/oneToMany.png)
+![](JPA/oneToMany.png)
 
 ## 2.OneToOne
 
-![](image/oneToOne.png)
+![](JPA/oneToOne.png)
 
 ## 3.LazyLoading
 
-![](image/oneToOne2.png)
+![](JPA/oneToOne2.png)
 
 ## 4.ManyToMany
 
-![](image/manyToMany.png)
+![](JPA/manyToMany.png)
 
 # 6.JPQL
 
