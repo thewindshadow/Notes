@@ -2,9 +2,9 @@
 
 #### 1.DEV 和 TEST 异常
 
-![异常](./pic_work\异常.png)
+![异常](./pic_work/exception.png)
 
-#### 
+
 
 #### 2.TomCat  报 PermGen space 错误
 
@@ -112,6 +112,7 @@ Idea进行打包的时候不会将XML文件打进到classes文件夹下，所以
 #### 1.从字符串中识别中文地址
 
 ```java
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -572,7 +573,177 @@ url:'getSysCommonLibDropDownData?paramsval=sys_ssku_wharehouse|N|0|',//Y表示�
 
 
 
+#### 16. Object-->String, String-->Object
 
+~~~java
+//fastjson
+//String->Object
+JSONObject ton = JSON.parseObject(EntityUtils.toString(response1.getEntity()));
+//Object->String
+String json = JSON.toJSONString(map);
+~~~
+
+
+
+#### 17 哪些sql 会引起全盘扫描
+
+覆盖索引是[select](https://baike.baidu.com/item/select/12504672)的数据列只用从索引中就能够取得，不必读取数据行，换句话说查询列要被所建的索引覆盖 
+
+~~~xml
+1. select count(*) 会全盘扫描 应该杜绝
+
+2.对于大数据量查询，应先分页，再join,直接join 会损耗集群资源
+
+3.update 不要更新全盘字段
+
+4.or 有时候会引起全局扫描 where a = 1 or b  = 2
+
+5.查询条件中使用了不等于操作符（<>、!=）的select语句执行慢
+
+6.应该尽量避免查询条件使用like
+
+7.查询条件中 有is null select 语句执行慢
+~~~
+
+#### 18.开始时间与结束时间限制为一个月之内
+
+~~~html
+
+<tr>
+    <td valign="middle">起始时间: </td>
+    <td>
+        <input type="text" id="oper_effectiveDate" name="effectiveDate"  required="required" style="width:120px;" class="Wdate easyui-validatebox" onclick="WdatePicker({dateFmt:'yyyy-MM-dd',maxDate:'#F{$dp.$D(\'oper_expiryDate\')}'});"/>
+    </td>
+</tr>
+<tr>
+    <td valign="middle">结束时间: </td>
+    <td>
+        <input type="text" id="oper_expiryDate" name="expiryDate"  required="required" 
+			style="width:120px;" class="Wdate easyui-validatebox"
+               onFocus="WdatePicker({dateFmt:'yyyy-MM-dd',
+maxDate:'#F{$dp.$D(\'oper_effectiveDate\',
+{d:31})}',minDate:'#F{$dp.$D(\'oper_effectiveDate\')}'})" disabled="disabled"/>
+    </td>
+</tr>
+
+
+----------------------------------------
+<script>
+   $("#select-time").click(function () {
+      WdatePicker({
+          el: this, //点击对象id，一般可省略el
+          lang: 'auto', //语言选择，一般用auto
+          dateFmt: 'yyyy-MM-dd HH:mm:ss', //时间显示格式，年月日 时分秒，年月日就是yyyy-MM-dd
+          minDate: '#F{$dp.$D(\'inputstarttime\')}', //最小日期
+          maxDate: '%y-%M-%d', //最大日期（当前时间）
+          readOnly: true, //是否只读
+          isShowClear: true, //是否显示“清空”按钮
+          isShowOK: true, //是否显示“确定”按钮
+          isShowToday: true, //是否显示“今天”按钮
+          autoPickDate: true //为false时 点日期的时候不自动输入,而是要通过确定才能输入，为true时 即点击日期即可返回日期值，为null时(推荐使用) 如果有时间置为false 否则置为true
+      })
+  })
+</script>
+--------------------------------------------------------
+<script>
+    $("#select-start-time").click(function () {
+        WdatePicker({
+            lang: 'auto',
+            dateFmt: 'yyyy-MM-dd',
+            maxDate: '#F{$dp.$D(\'select-end-time\')||\'%y-%M-%d\'}',
+            readOnly: true
+        })
+    })
+    $("#select-end-time").click(function () {
+        WdatePicker({
+            lang: 'auto',
+            dateFmt: 'yyyy-MM-dd',
+            minDate: '#F{$dp.$D(\'select-start-time\')}',
+            maxDate: '%y-%M-%d',
+            readOnly: true
+        })
+    })
+</script>
+
+
+-----------示例-------------
+<!DOCTYPE html>
+<html>
+<title></title>
+<!-- 引入datepicker.css -->
+<link rel="stylesheet" type="text/css" href="datepicker/skin/default/datepicker.css">
+<!-- 引入easyui.css -->
+<link rel="stylesheet" type="text/css" href="jquery-easyui-1.5.5.4/themes/default/easyui.css">
+<!-- 使用jQuery操作 -->
+<script type="text/javascript" src="jquery-3.3.1.min.js"></script>
+<script type="text/javascript" src="jquery-easyui-1.5.5.4/locale/easyui-lang-zh_CN.js"></script>
+<script type="text/javascript" src="jquery-easyui-1.5.5.4/jquery.easyui.min.js"></script>
+<!-- 使用wdatepicker.js -->
+<script type="text/javascript" src="datepicker/WdatePicker.js"></script>
+
+
+<body>
+	<!--  class="Wdate easyui-validbox" -->
+	<input required="required" id="start_time" class="Wdate easyui-validatebox" ></button><br><br>
+	<input required="required" id="end_time" class="Wdate easyui-validatebox"  /><br><br>
+
+<script type="text/javascript">
+	$("#start_time").click(function () {
+		WdatePicker({
+			el:this,
+			lang:'auto',
+			dateFmt:'yyyy-MM-dd HH:mm:ss',
+			// minDate:'#F{$dp.$D(\'start_time\')}',
+			maxDate: '#F{$dp.$D(\'end_time\')||\'%y-%M-%d %H:%m:%s\'}',
+			// maxDate: '#F{$dp.$D(\'end_time\')}',
+			readOnly: true
+		});
+	});
+
+	$("#end_time").click(function () {
+		WdatePicker({
+			el:this,
+			lang:'auto',
+			dateFmt:'yyyy-MM-dd HH:mm:ss',
+			minDate: '#F{$dp.$D(\'start_time\')}',
+			maxDate: '#F{$dp.$D(\'start_time\',{d:+31})}',
+			readOnly: true
+		});
+	});
+</script>
+</body>
+</html>
+
+~~~
+
+#### 19.判断指定单选框是否被选中
+
+~~~js
+beforeSubmit: function() {
+    // radio类型，名字为orderType
+    var isChecked = $("input[type='radio'][name='orderType']:checked").length == 0;
+    if(isChecked){
+        $.messager.alert('提示', '请选择模板类型！', 'error');
+        return false;
+    }
+}
+
+~~~
+
+#### 20.EasyUI progress进度条循环
+
+~~~js
+//开启 
+$.messager.progress({
+    title:'执行中',
+    msg:'努力上传中...',
+    text:'亲，不要着急哦！',
+    interval:1000,
+});
+
+//关闭
+$.messager.progress('close');
+~~~
 
 
 

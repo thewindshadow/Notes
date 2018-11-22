@@ -181,6 +181,66 @@ fatal: remote origin already exists.
  git add .
 ~~~
 
+##### 6.RPC failed
+
+~~~shell
+5161@LRLZ5161 MINGW64 /d
+$ git clone https://github.com/ooyhao/Node_Vue.git
+Cloning into 'Node_Vue'...
+remote: Enumerating objects: 8366, done.
+remote: Counting objects: 100% (8366/8366), done.
+remote: Compressing objects: 100% (5976/5976), done.
+error: RPC failed; curl 18 transfer closed with outstanding read data remaining
+fatal: The remote end hung up unexpectedly
+fatal: early EOF
+fatal: index-pack failed
+
+这个错误是因为项目太久，tag资源文件太大
+
+解决方式一， 网上大部分解决措施：命令终端输入 
+git config --global http.postBuffer 524288000
+
+用上面的命令有的人可以解决，我的还不行，需要如下方式命令，只clone深度为一
+
+$ git clone /github_com/large-repository --depth 1  （只获取最后一个commit）
+$ cd large-repository
+$ git fetch --unshallow
+
+中划线处填入你的git仓库的地址。。。（我用的是http方式，不是ssh）
+
+解决方式二，一般clone http方式的容易产生此问题，改成SSH的方式也有效，即https://改为git://
+
+遇到的问题二：
+
+warning: templates not found /usr/local/git/share/git-core/templates
+
+
+
+ 在终端输入 
+  open /usr/local/
+ 在打开的目录中可以看到:
+如果没有 git 目录
+打开下面的地址,下载 git-osx 并安装,
+ http://git-scm.com/download/mac 
+
+ 如果有 git 目录
+ 并且相应的 share,git-core,templates 目录都有,,说明是权限的问题.
+
+ 在终端输入:
+ sudo chmod -R 755 /usr/local/git/share/git-core/templates
+ 注意 sudo 创建目录需要输入当前 Mac 用户的密码
+ 最后重新 clone 项目
+
+以上问题是我在Mac电脑用xcode自带git、sourcetree、终端三个方式clone某个项目都不能成功克隆下来。
+遇到的问题，其他项目都可以。
+~~~
+
+**这个错误是因为项目太久，tag资源文件太大** 
+
+
+
+
+
 ### 3.分支操作
 
 1.查看远程分支
@@ -201,7 +261,6 @@ $ git branch -a
 5161@LRLZ5161 MINGW64 ~/Desktop/Notes (master)
 $ git branch
 * master
-
 
 ~~~
 
