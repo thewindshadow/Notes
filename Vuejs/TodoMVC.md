@@ -1,7 +1,7 @@
 ---
 title: Vue
 date: 2018-11-17 12:16:18
-tags: vue
+tags: TODO-MVC
 categories: vue
 ---
 
@@ -13,13 +13,11 @@ categories: vue
 
 
 
-
-
 ### 1.下载TodoMVC模板
 
-![](D:\Notes\Vuejs\TodoMVC\todomvccom.png)
+![](./TodoMVC/todomvccom.png)
 
-![](D:\Notes\Vuejs\TodoMVC\cloneTodomvc.png)
+![](./TodoMVC/cloneTodomvc.png)
 
 ~~~shell
 git clone https://github.com/tastejs/todomvc-app-template.
@@ -507,7 +505,64 @@ watch:{
 
 
 
+#### 11.输入框聚焦
 
+~~~html
+<input
+    v-on:keydown.enter="handleNewTodoKeyDown"
+    class="new-todo"
+    placeholder="What needs to be done?"
+    v-focus
+    >
+~~~
+
+
+
+~~~js
+/**聚焦比较特殊，不能写在bind中*/
+directives:{
+    focus:{
+        inserted:function(el){
+            el.focus();
+        }
+    }
+},
+~~~
+
+
+
+#### 12.编辑框聚焦
+
+~~~html
+<input
+    v-todo-focus="currentEditing === item"
+    class="edit"
+    @keydown.esc="handleCancelEditEsc"
+    @keydown.enter="handleSaveTodo(item,index,$event)"
+    @blur="handleSaveTodo(item,index,$event)"
+    :value="item.title"
+    >
+~~~
+
+
+
+~~~js
+Vue.directive('todo-focus',{
+    update:function(el,binding){
+        //多个focus只有第一个生效。所以可以直接使用el.focus();但是不严谨
+        //可以通过传递进行判断。
+        if(binding.value){
+            el.focus();
+        }
+    }
+});
+~~~
+
+
+
+### 6.效果图
+
+![](TodoMVC/效果图.png)
 
 
 

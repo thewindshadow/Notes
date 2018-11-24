@@ -1,7 +1,7 @@
 ---
-title: Vue
+********title: Vue
 date: 2018-11-17 12:16:18
-tags: vue
+tags: vue笔记
 categories: vue
 ---
 
@@ -324,9 +324,36 @@ v-on 缩写
 定义全局自定义指令  Vue.directive('',{}); 需要写在 var app = new Vue({});之前，否则不能生效。
 ~~~
 
+什么是自定义指令 ？
 
+- 除了使用vue提供的内置指令之外，我们可以自定义一些自己的指令。
+
+什么时候需要自定义指令？
+
+- 当需要不可避免的操作DOM的时候，使用自定义指令来解决
+
+如何注册和使用自定义指令？
+
+- 注册
+  - 全局注册，在任何组件中都可以使用全局注册自定义指令。
+  - 局部注册，只能在当前组件使用该指令。
+    - 如果需要在多个不同的组件中使用该指令，则把它定义为全局的
+    - 非通用的，不需要多次使用的指令我们定义为局部的，是否通用取决于你的功能业务
+- 使用
+
+
+
+自定义指令的参数：
+
+- 第一个参数：
+  - 注册一个全局自定义指令`v-focus`，在使用的时候必须加上v-前缀，建议在取名字的时候就不要加v-前缀。
+  - 如果是驼峰命名法，则在使用的时候需要把驼峰转为小写使用  -  连接起来
+- 第二个参数：
+  - 需要配置指令的生命钩子函数
 
 #### v-focus
+
+**(聚焦比较特殊，不能写在bind中)**
 
 ~~~html
 <div id="app">
@@ -337,7 +364,9 @@ v-on 缩写
     
     //注册全局指令
     Vue.directive('focus',{
+        //当被绑定的元素插入到DOM中时...
         inserted:function(el){
+            //聚焦元素
             el.focus();
         }
     });
@@ -379,7 +408,25 @@ v-on 缩写
 - `componentUpdated`：指令所在组件的 VNode **及其子 VNode** 全部更新后调用。
 - `unbind`：只调用一次，指令与元素解绑时调用。
 
-接下来我们来看一下钩子函数的参数 (即 `el`、`binding`、`vnode` 和 `oldVnode`)。
+总结：
+
+- bind 初始化执行一次，后面不再执行，拿不到当前节点的父节点（el.parentNode == null）
+- inserted初始化执行一次（后于bind），后面不再执行，可以拿到当前节点的父节点
+  - 如果不需要操作父节点，可以使用bind/inserted，如果需要，则只能使用inserted。  
+- update和componentUpdated只有在指定**所在模板**发生更新的时候才会触发调用
+  - update中的el.innerHTML获取的是模板更新之前的指令所在DOM的内容
+  - componentUpdated的el.innerHTML获取的是模板更新之后最新的指令所在的DOM内容、
+- unbind：可以做一些收尾工作，比如清除定时器。
+
+**所在模板**：
+
+~~~html
+<div id="app">
+  //code 只要这里的任一内容更新，update与componentUpdated就会调用执行。
+</div>
+~~~
+
+
 
 
 
@@ -434,7 +481,194 @@ Vue.directive('demo', function (el, binding) {
 
 
 
-**自定义指令示例：**
+#### 自定义指令示例
+
+##### 自定义指令实现v-show
+
+~~~html
+<div id="app">
+    <h1 v-myshow="seen" >Hello Vue.js</h1>
+</div>
+
+<script>
+    Vue.directive('myshow',{
+        bind:function(el,binding){
+            if(binding.value){
+                el.style.display = 'block';
+            }else{
+                el.style.display = 'none';
+            }
+        },
+        inserted:function(){
+            //上面的bind中的代码也可以放在此处
+        },
+        update:function(el,binding){
+            if(binding.value){
+                el.style.display = 'block';
+            }else{
+                el.style.display = 'none';
+            }
+        },
+        componentUpdated:function(){
+            //上面的update中的代码也可以放在此处
+        },
+        unbind:function(){
+
+        }
+    });
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            seen:true
+        },
+        methods: {}
+    });
+</script>
+~~~
+
+上述代码可以简化为：（**只想在 `bind` 和 `update` 时触发相同行为，而不关心其它的钩子**）
+
+~~~html
+<div id="app">
+    <h1 v-myshow="seen" >Hello Vue.js</h1>
+</div>
+
+<script>
+    Vue.directive('myshow',function(el,binding){
+        if(binding.value){
+            el.style.display = 'block';
+        }else{
+            el.style.display = 'none';
+        }
+    });
+    var app = new Vue({
+        el: '#app',
+        data: {
+            seen:true
+        },
+        methods: {}
+    });
+</script>
+~~~
+
+
+
+##### 自定义指令实现v-bind
+
+~~~html
+<!DOCTYPE html>
+<html
+      xmlns:v-bind="http://www.w3.org/1999/xhtml"
+      xmlns:v-mybind="http://www.w3.org/1999/xhtml">
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="node_modules/vue/dist/vue.min.js"></script>
+</head>
+<style>
+    .border{
+        width: 200px;
+        height: 200px;
+        border: 2px solid red;
+    }
+    .bg{
+        background-color: blue;
+    }
+</style>
+<body>
+
+<div id="app">
+    <span v-mybind:title=" 'Hello OuYang' ">234</span>
+    <div v-bind:class="{border:border,bg:bg}">v中的v-bind</div>
+    <hr/>
+    <div v-mybind:class="'border'" >自定义的v-bind</div>
+    <hr/>
+    <input type="text" v-mybind:value="1234"/>
+    <hr/>
+    <div v-mybind:class="{border:border,bg:bg}">对象属性</div>
+</div>
+<script>
+
+    /*Vue.directive('mybind',{
+        bind:function(el,binding){
+            /!**获取需要绑定的属性*!/
+            var arg = binding.arg;
+            if(binding.value instanceof Object && arg === 'class'){
+                var values = binding.value;
+                for(var key in values){
+                    if(values[key] && !el.classList.contains(key)){
+                        el.classList.add(key);
+                    }else if(!values[key] && el.classList.contains(key)){
+                        el.classList.remove(key);
+                    }
+                }
+                return;
+            }
+            /!**获取需要指定的值*!/
+            var value = binding.value;
+            el.setAttribute(arg,value);
+        },
+        update:function(el,binding){
+            /!**获取需要绑定的属性*!/
+            var arg = binding.arg;
+            if(binding.value instanceof Object && arg === 'class'){
+                var values = binding.value;
+                for(var key in values){
+                    if(values[key] && !el.classList.contains(key)){
+                        el.classList.add(key);
+                    }else if(!values[key] && el.classList.contains(key)){
+                        el.classList.remove(key);
+                    }
+                }
+                return;
+            }
+            /!**获取需要指定的值*!/
+            var value = binding.value;
+            el.setAttribute(arg,value);
+        }
+    });*/
+  	//简写方式
+    Vue.directive('mybind',function(el,binding){
+        /**获取需要绑定的属性*/
+        var arg = binding.arg;
+        if(binding.value instanceof Object && arg === 'class'){
+            var values = binding.value;
+            for(var key in values){
+                if(values[key] && !el.classList.contains(key)){
+                    el.classList.add(key);
+                }else if(!values[key] && el.classList.contains(key)){
+                    el.classList.remove(key);
+                }
+            }
+            return;
+        }
+        /**获取需要指定的值*/
+        var value = binding.value;
+        el.setAttribute(arg,value);
+    });
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            border:true,
+            bg:true
+        },
+        methods: {},
+        computed: {},
+        watch: {},
+        directives:{}
+    });
+</script>
+</body>
+</html>
+~~~
+
+
+
+
+
+##### 自定义指令v-color
 
 ~~~html
 <div id="app">
@@ -469,8 +703,6 @@ Vue.directive('demo', function (el, binding) {
 ~~~
 
 ![](vue/customDirective.png)
-
-
 
 
 
@@ -955,7 +1187,13 @@ v-if与v-show在为true的时候，都会进行渲染DOM进行元素的显示，
 
 #### v-text 和 v-clock
 
-注意：使用{{}}双大括号时，可能由于加载与vue渲染速度的影响，在页面上回出现短暂的多个{{message}}。而后才被vue渲染，为了解决这个闪烁问题，可以使用`v-text`指令进行解决，`v-text`指令的作用就是在message还未被渲染的时候，页面是空白的而不是显示{{message}}。但是如下所示，如何有很多`<p v-text="message"></p>`会显得十分麻烦，可以利用`v-cloak`进行解决，先是通过display=none的方式隐藏，后面渲染后通过display=block的方式来显示，如下：
+注意：
+
+~~~html
+使用{{}}双大括号时，可能由于加载与vue渲染速度的影响，在页面上回出现短暂的多个{{message}}。而后才被vue渲染，为了解决这个闪烁问题，可以使用v-text指令进行解决，v-text指令的作用就是在message还未被渲染的时候，页面是空白的而不是显示{{message}}。但是如下所示，如何有很多<p v-text="message"></p>会显得十分麻烦，可以利用v-cloak进行解决，先是通过display=none的方式隐藏，后面渲染后通过display=block的方式来显示，
+~~~
+
+如下：
 
 ~~~html
 <div id="app">
@@ -1768,8 +2006,9 @@ Vue.config.keyCodes.f1 = 112
 计算属性是vue的一大特色：
 
 - 该成员是一种带有行为的属性，但是在使用的时候必须当做属性来使用。
-- 它相比方法的优势就在于会缓存计算的结果，效率很高。
+- 它相比方法(methods)的优势就在于会缓存计算的结果，效率很高。
 - 计算属性只能当成属性来使用，不能用于事件处理函数。
+- 计算属性相当于对某个功能丰富的一个代理，本身不存储值
 
 #### 基础例子
 
@@ -1960,6 +2199,936 @@ computed: {
 
 **总结：**有上述实验结果可以看出，修改firstName或lastName的时候会影响到fullName，同时当我们改变fullName的时候，firstName和lastName也会进行相应的变化。
 
+#### 使用计算属性实现搜索框模糊匹配
+
+~~~html
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="node_modules/vue/dist/vue.min.js"></script>
+</head>
+<body>
+<div id="app">
+    <input v-model="key" type="text"/><button @click="search">搜索</button>
+    <br/>
+    性别：
+    <input type="radio" name="gender" value="" v-model="picker" checked /> 全部
+    <input type="radio" name="gender" value="男" v-model="picker" /> 男
+    <input type="radio" name="gender" value="女" v-model="picker" /> 女
+    <br/>
+    <table>
+        <thead>
+        <th>id</th>
+        <th>姓名</th>
+        <th>性别</th>
+        </thead>
+        <tbody>
+            <tr v-for="item in filterUsers">
+                <td>{{item.id}}</td>
+                <td>{{item.name}}</td>
+                <td>{{item.gender}}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+
+    var users = [
+        {
+            id:1,
+            name:'Jack',
+            gender:'男'
+        },{
+            id:2,
+            name:'Tom',
+            gender:'男'
+        },{
+            id:3,
+            name:'Bob',
+            gender:'男'
+        },{
+            id:4,
+            name:'Lily',
+            gender:'女'
+        },{
+            id:5,
+            name:'lucy',
+            gender:'女'
+        }
+    ];
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            users:users,
+            keyword:'',
+            key:'',
+            picker:''
+        },
+        methods: {
+            search:function(){
+                this.keyword = this.key;
+            }
+        },
+        computed:{
+            filterUsers:function(){
+                var k = this.keyword.trim().toLowerCase();
+                var p = this.picker;
+                return this.users.filter(function(item){
+                    return item.name.toLowerCase().includes(k) && item.gender.includes(p);
+                });
+                /**简写方式*/
+               /* return this.users.filter(
+                                item => item.name.includes(this.keyword) && item.gender.includes(this.picker)
+                );*/
+            }
+        }
+    });
+</script>
+</body>
+</html>
+~~~
+
+效果图：
+
+![](vue/过滤数组.png)
+
+
+
+### 组件
+
+#### 组件的概念
+
+- 模块化是一种思想，一种构建方式，把一种很复杂的事物拆分成一个一个小模块，然后通过某种特定的方式把这些小模块组织到一起相互协作完成这个复杂的功能。
+- 在程序中也是一样的，之前学习的JavaScript模块化，不要在一个文件中写大量的代码。
+- 在vue中，组件就是用来封装视图的，说白了就是封装HTML。
+- 组件思想其实就是把一个很大的复杂的web页面视图给拆分成一个一个的组件视图，然后利用某种特定的方式组织到一起，完成完整的web应用构建。
+  - HTML结构
+  - CSS样式
+  - JavaScript行为
+- 为什么把视图进行组件化拆分成一块一块的呢？
+  - 开发效率,便于人员分工
+  - 可维护性
+  - 可重用性
+
+
+
+#### 组件的组织
+
+![](vue/组件的组织.png)
+
+
+
+#### 使用组件
+
+组件的定义方式分为两种，全局定义和局部定义：
+
+- 全局组件定义在全局，在任意组件中都可以直接使用。
+- 局部组件定义在组件内部，只能在当前组件使用。
+- 建议把通用的组件定义在全局，把不通用的组件定义为局部。
+
+
+
+#### 全局注册
+
+到目前为止，我们只用过 `Vue.component` 来创建组件：
+
+```
+Vue.component('my-component-name', {
+  // ... 选项对象 ...
+})
+```
+
+这些组件是**全局注册的**。也就是说它们在注册之后可以用在任何新创建的 Vue 根实例 (`new Vue`) 的模板中。比如：
+
+```
+Vue.component('component-a', { /* ... */ })
+Vue.component('component-b', { /* ... */ })
+Vue.component('component-c', { /* ... */ })
+
+new Vue({ el: '#app' })
+
+<div id="app">
+  <component-a></component-a>
+  <component-b></component-b>
+  <component-c></component-c>
+</div>
+```
+
+在所有子组件中也是如此，也就是说这三个组件*在各自内部*也都可以相互使用。
+
+
+
+
+
+#### 局部注册
+
+全局注册往往是不够理想的。比如，如果你使用一个像 webpack 这样的构建系统，全局注册所有的组件意味着即便你已经不再使用一个组件了，它仍然会被包含在你最终的构建结果中。这造成了用户下载的 JavaScript 的无谓的增加。
+
+在这些情况下，你可以通过一个普通的 JavaScript 对象来定义组件：
+
+```
+var ComponentA = { /* ... */ }
+var ComponentB = { /* ... */ }
+var ComponentC = { /* ... */ }
+
+```
+
+然后在 `components` 选项中定义你想要使用的组件：
+
+```
+new Vue({
+  el: '#app',
+  components: {
+    'component-a': ComponentA,
+    'component-b': ComponentB
+  }
+})
+```
+
+对于 `components` 对象中的每个属性来说，其属性名就是自定义元素的名字，其属性值就是这个组件的选项对象。
+
+注意**局部注册的组件在其子组件中不可用**。例如，如果你希望 `ComponentA` 在 `ComponentB` 中可用，则你需要这样写：
+
+```
+var ComponentA = { /* ... */ }
+
+var ComponentB = {
+  components: {
+    'component-a': ComponentA
+  },
+  // ...
+}
+```
+
+或者如果你通过 Babel 和 webpack 使用 ES2015 模块，那么代码看起来更像：
+
+```
+import ComponentA from './ComponentA.vue'
+
+export default {
+  components: {
+    ComponentA
+  },
+  // ...
+}
+```
+
+注意在 ES2015+ 中，在对象中放一个类似 `ComponentA` 的变量名其实是 `ComponentA: ComponentA` 的缩写，即这个变量名同时是：
+
+- 用在模板中的自定义元素的名称
+- 包含了这个组件选项的变量名
+
+#### 全局组件与局部组件的demo
+
+~~~html
+<div id="app">
+    <global-component></global-component>
+</div>
+<script>
+    Vue.component('global-component',{
+        template:'<div>' +
+        '<div>global component</div>' +
+        '<global-component2></global-component2>' +
+        '<hello></hello>' +
+        '</div>',
+        /*组件实例选项（局部组件），components用来定义组件，这种方式定义的组件只能在当前组件中使用*/
+        components:{
+            /** hello:是组件的名称，{}是一个对象，对象中配置组件的选项*/
+            hello:{
+                template:'<div>Hello Component</div>'
+            }
+        }
+    });
+  	//全局组件
+    Vue.component('global-component2',{
+        template:'<div>global2 component</div>'
+    });
+    var app = new Vue({
+        el: '#app',
+        data: {},
+        methods: {}
+    });
+</script>
+~~~
+
+组件一般分为两种：
+
+- 通用的组件，例如轮播图、评分
+
+- 涉及业务的组件，不通用
+
+  所以涉及业务的尽量定义成局部，不要污染全局
+
+
+
+
+
+#### 组件的模板
+
+template有三种形式：
+
+- 可以是字面量字符串，缺点是没有高亮，内置在JavaScript中，写起来麻烦
+
+  ~~~js
+  //1.先定义（注册）组件
+  //2.使用(相当于扩展html标签)
+  // 注意：只能有一个根元素，不能写成template:'<div>My Component</div><h1>Hello vue</h1>'
+  Vue.component('my-component',{
+      template:'<div>My Component</div>'
+  });
+  ~~~
+
+- 可以写在script标签中，虽然解决了高亮的问题，但是也麻烦。
+
+  ~~~html
+  <!--
+      把type 指定为 text/x-template
+      起一个id
+  -->
+  <script type="text/x-template" id="hello-world-template">
+      <p>Hello Vue.js</p>
+  </script>
+
+  <div id="app">
+      <my-component></my-component>
+  </div>
+
+  <script>
+      Vue.component('my-component',{
+          template:'#hello-world-template'
+      });
+      var app = new Vue({
+          el: '#app',
+          data: {},
+          methods: {}
+      });
+  </script>
+  ~~~
+
+- 以上方式都不好，我们最终解决方案是使用vue的.vue单文件组件来写。
+
+  - 但是要想使用这种方式必须结合一些构建工具
+
+
+
+#### 组件的作用域
+
+- 组件是独立的作用域，就像我们Node中的JavaScript模块一样，独立的。
+  - 组件无法访问外部作用域成员
+  - 外部作用域也无法访问组件内部成员
+- 组件其实就是一个特殊的Vue实例，可以有自己的data，methods，computed，watch等等选项。
+- 组件的data必须是方法，方法中返回一个对象作为组件的data
+
+~~~html
+<div id="app">
+    <my-component></my-component>
+</div>
+<script>
+    //1.先定义（注册）组件
+    //2.使用(相当于扩展html标签)
+//      注意：只能有一个根元素，不能写成template:'<div>My Component</div><h1>Hello vue</h1>'
+    Vue.component('my-component',{
+//        template:'<div>My Component</div>'
+        template:'<div>' +
+        '<div>My Component</div>' +
+        '<h2>{{message}}</h2>' +
+        '<input type="checkbox" v-model="seen" >' +
+        '<div v-if="seen" class="box"></div>' +
+        '</div>',
+        data:function(){
+            return {
+                message:'Component Data',
+                seen:true
+            }
+        }
+    });
+    var app = new Vue({
+        el: '#app',
+        data: {},
+        methods: {}
+    });
+</script>
+~~~
+
+
+
+#### 组件组合
+
+组件设计初衷就是要配合使用的，最常见的就是形成父子组件的关系：组件 A 在它的模板中使用了组件 B。它们之间必然需要相互通信：父组件可能要给子组件下发数据，子组件则可能要将它内部发生的事情告知父组件。然而，通过一个良好定义的接口来尽可能将父子组件解耦也是很重要的。这保证了每个组件的代码可以在相对隔离的环境中书写和理解，从而提高了其可维护性和复用性。 在 Vue 中，父子组件的关系可以总结为 prop 向下传递，事件向上传递。父组件通过 prop 给子组件下发数据，子组件通过事件给父组件发送消息。看看它们是怎么工作的。
+
+![prop 向下传递，事件向上传递](vue/props-events.png)
+
+### 组件通信
+
+在树形结构里面，组件之间有几种典型的关系：父子关系、兄弟关系、没有直接关系。
+
+相应地，组件之间有以下几种典型的通讯方案：
+
+- 直接的父子关系
+- 直接的父子关系
+- 没有直接关系
+- 利用 cookie 和 localstorage 进行通讯。
+- 利用 session 进行通讯。
+- 父传子 Props Down
+- 子通知父亲 Events Up
+- 通过 ref 父亲直接访问子组件
+  - 给子组件起个 ref
+  - 然后在父组件中通过 `this.$refs.子组件ref名`
+- 子组件可以在内部通过 `this.$parent` 直接访问父组件
+- 非父子关系
+  - 事件通信 Events Bus
+  - Global Bus
+- 集中式状态管理 Vuex
+
+#### 父子组件通信：Props Down
+
+~~~html
+父组件：<div v-bind=""></div>
+子组件：prop属性接收
+~~~
+
+
+
+##### TodoMVC中的父组件给子组件传值
+
+###### 父组件
+
+~~~js
+//采用组件化构建方式
+//一个应用被一个根组件管理起来
+// 根组件中嵌套了子组件
+// 子组件还可以嵌套自己的子子组件
+;(function(){
+	var todos = [
+		{
+			id:1,
+			title:'吃饭',
+			completed:false
+		},{
+			id:2,
+			title:'睡觉',
+			completed:true
+		},{
+			id:3,
+			title:'打豆豆',
+			completed:false
+		}
+	];
+	 window.App = {
+		template:'<div id="app" >' +
+		'<section class="todoapp">' +
+		'<todo-header></todo-header>' +
+		'<todo-list v-bind:todos="todos" ></todo-list>' +
+		'<todo-footer></todo-footer>' +
+		'</section>' +
+		'<app-footer></app-footer>' +
+		'</div>',
+		 /**
+		  * 1.在父组件中通过子组件标签声明属性的方式。
+		  * 	注意：只有v-bind才可以传递动态数据
+		  * 2.在子组件中声明props接收父组件传递给自己的数据
+		  * 3.就可以在子组件中进行使用了（只能使用，不能重新赋值）
+		  * */
+		components:{
+			'todo-header':todoHeader,
+			'todo-list':todoList,
+			'todo-footer':todoFooter,
+			'app-footer':appFooter
+		},
+		 data:function(){
+			 return {
+				 todos:todos
+			 }
+		 }
+	};
+})();
+~~~
+
+
+
+###### 子组件
+
+~~~js
+;(function(){
+    var temp =
+
+    '<section class="main">'+
+        '<input id="toggle-all" class="toggle-all" type="checkbox">'+
+        '<label for="toggle-all">Mark all as complete</label>'+
+        '<ul class="todo-list">'+
+            '<li v-bind:class="{completed:item.completed}" v-for="item in todos" >'+
+                '<div class="view">'+
+                    '<input class="toggle" type="checkbox" v-model="item.completed">'+
+                    '<label>{{item.title}}</label>'+
+                    '<button class="destroy"></button>'+
+                '</div>'+
+                '<input class="edit" value="Create a TodoMVC template">'+
+            '</li>'+
+        '</ul>'+
+    '</section>';
+
+    window.todoList = {
+        template:temp,
+        //子组件就会把父组件在标签中声明的foo拿到
+      	//组件接收到的props数据就可以像访问data中的数据一样直接获取
+        props:['todos']
+    }
+})();
+~~~
+
+
+
+
+
+**1. 在父组件中通过子组件标签属性传递数据**
+
+```html
+<child message="hello!"></child>
+```
+
+**2. 在子组件显式地用 props 选项声明它预期的数据并使用**
+
+```js
+Vue.component('child', {
+  // 声明 props
+  props: ['message'],
+  // 就像 data 一样，prop 也可以在模板中使用
+  // 同样也可以在 vm 实例中通过 this.message 来使用
+  template: '<span>{{ message }}</span>'
+});
+```
+
+##### camelCase vs. kebab-case
+
+HTML 特性是不区分大小写的。所以，当使用的不是字符串模板时，camelCase (驼峰式命名) 的 prop 需要转换为相对应的 kebab-case (短横线分隔式命名)。
+
+```
+Vue.component('child', {
+  // 在 JavaScript 中使用 camelCase
+  props: ['myMessage'],
+  template: '<span>{{ myMessage }}</span>'
+});
+
+```
+
+```
+<!-- 在 HTML 中使用 kebab-case -->
+<child my-message="hello!"></child>
+
+```
+
+如果你使用字符串模板，则没有这些限制。
+
+##### 动态 Prop
+
+与绑定到任何普通的 HTML 特性相类似，我们可以用 `v-bind` 来动态地将 `prop` 绑定到父组件的数据。每当父组件的数据变化时，该变化也会传导给子组件：
+
+```
+<div>
+  <input v-model="parentMsg">
+  <br>
+  <child v-bind:my-message="parentMsg"></child>
+</div>
+```
+
+你也可以使用 v-bind 的缩写语法：
+
+```
+<child :my-message="parentMsg"></child>
+
+```
+
+##### 字面量语法 vs 动态语法
+
+初学者常犯的一个错误是使用字面量语法传递数值：
+
+```
+<!-- 传递了一个字符串 "1" -->
+<comp some-prop="1"></comp>
+```
+
+因为它是一个字面量 prop，它的值是字符串 "1" 而不是一个数值。如果想传递一个真正的 JavaScript 数值，则需要使用 v-bind，从而让它的值被当作 JavaScript 表达式计算：
+
+```
+<!-- 传递真正的数值 -->
+<comp v-bind:some-prop="1"></comp>
+```
+
+##### 单向数据流
+
+Prop 是单向绑定的：**当父组件的属性变化时，将传导给子组件，但是反过来不会**。这是为了防止子组件无意间修改了父组件的状态，来避免应用的数据流变得难以理解。
+
+另外，每次父组件更新时，子组件的所有 prop 都会更新为最新值。这意味着你不应该在子组件内部改变 prop。如果你这么做了，Vue 会在控制台给出警告。
+
+在两种情况下，我们很容易忍不住想去修改 prop 中数据：
+
+1. Prop 作为初始值传入后，子组件想把它当作局部数据来用
+2. Prop 作为原始数据传入，由子组件处理成其它数据输出
+
+对这两种情况，正确的应对方式是：
+
+**1. 定义一个局部变量，并用 prop 的值初始化它：**
+
+```js
+props: ['initialCounter'],
+data: function () {
+  return { counter: this.initialCounter }
+}
+```
+
+**2. 定义一个计算属性，处理 prop 的值并返回：**
+
+```js
+// ...
+props: ['size'],
+computed: {
+  normalizedSize: function () {
+    return this.size.trim().toLowerCase()
+  }
+},
+```
+
+!> 注意在 JavaScript 中对象和数组是引用类型，指向同一个内存空间，**如果 prop 是一个对象或数组，在子组件内部改变它会影响父组件的状态**。
+
+- 引用类型可以修改，但是重新赋值会报错
+
+注意：引用类型数据虽然可以修改，但是不建议使用，因为这样就违背了vue组件的通信原则，通信原则是单向数据流。
+
+- 父组件数据的改变可以影响到孩子
+  - 但是孩子不要去修改父组件的数据，因为当组件嵌套过深时，在子组件中修改父组件的数据可能让你的应用数据流变得非常复杂，而难以理解。
+    - 所以：即便是引用类型有这样的特征，也不要这样使用。
+
+##### Prop 验证
+
+我们可以为组件的 prop 指定验证规则。如果传入的数据不符合要求，Vue 会发出警告。这对于开发给他人使用的组件非常有用。 要指定验证规则，需要用对象的形式来定义 prop，而不能用字符串数组：
+
+```js
+Vue.component('example', {
+  props: {
+    // 基础类型检测 (`null` 指允许任何类型)
+    propA: Number,
+    // 可能是多种类型
+    propB: [String, Number],
+    // 必传且是字符串
+    propC: {
+      type: String,
+      required: true
+    },
+    // 数值且有默认值
+    propD: {
+      type: Number,
+      default: 100
+    },
+    // 数组/对象的默认值应当由一个工厂函数返回
+    propE: {
+      type: Object,
+      default: function () {
+        return { message: 'hello' }
+      }
+    },
+    // 自定义验证函数
+    propF: {
+      validator: function (value) {
+        return value > 10
+      }
+    }
+  }
+});
+```
+
+`type` 可以是下面原生构造器：
+
+- String
+- Number
+- Boolean
+- Function
+- Object
+- Array
+- Symbol
+
+type 也可以是一个自定义构造器函数，使用 instanceof 检测。
+
+当 prop 验证失败，Vue 会抛出警告 (如果使用的是开发版本)。 注意 prop 会在组件实例创建之前进行校验，所以在 default 或 validator 函数里，诸如 data、computed 或 methods 等实例属性还无法使用。
+
+------
+
+#### 父子组件通信：Events Up
+
+我们知道，父组件使用 prop 传递数据给子组件。但子组件怎么跟父组件通信呢？这个时候 Vue 的自定义事件系统就派得上用场了。
+
+1. **在子组件中调用 $emit() 方法发布一个事件**
+
+   （只负责发布，即相当于广播消息，谁要接收，谁就负责订阅并进行相应的操作即可）
+
+```js
+Vue.component('button-counter', {
+  template: '<button v-on:click="incrementCounter">{{ counter }}</button>',
+  data: function () {
+    return {
+      counter: 0
+    }
+  },
+  methods: {
+    incrementCounter: function () {
+      this.counter += 1
+      // 发布一个名字叫 increment 的事件
+      this.$emit('increment',counter)
+    }
+  },
+});
+```
+
+**2. 在父组件中提供一个子组件内部发布的事件处理函数**
+
+```
+new Vue({
+  el: '#counter-event-example',
+  data: {
+    total: 0
+  },
+  methods: {
+    incrementTotal: function (counter) {
+      this.total += 1
+    }
+  }
+});
+```
+
+**3. 在使用子组件的模板的标签上订阅子组件内部发布的事件**
+
+```
+<div id="counter-event-example">
+  <p>{{ total }}</p>
+  <!-- 
+    订阅子组件内部发布的 increment 事件
+    当子组件内部 $commit('increment') 发布的时候，就会调用到父组件中的 incrementTotal 方法
+  -->
+  <button-counter v-on:increment="incrementTotal"></button-counter>
+</div>
+
+```
+
+##### 给组件绑定原生事件
+
+有时候，你可能想在某个组件的根元素上监听一个原生事件。可以使用 `v-on` 的修饰符 `.native`。例如：
+
+```html
+<my-component v-on:click.native="doTheThing"></my-component>
+```
+
+##### `.sync` 修饰符
+
+在一些情况下，我们可能会需要对一个 prop 进行“双向绑定”。 就是当一个子组件改变了一个带 .sync 的 prop 的值时，这个变化也会同步到父组件中所绑定的值。
+
+在使用子组件的时候加上 `.sync` 修饰符：
+
+```html
+<comp :foo.sync="bar"></comp>
+```
+
+在子组件内部更新 `foo` 的值时，显示的触发一个更新事件：
+
+```
+this.$emit('update:foo', newValue);
+
+```
+
+
+
+##### TodoMVC中子组件向父组件通信
+
+（通知与订阅，相当于消息队列一样）
+
+步骤：
+
+- 1.在父组件中定义一个方法
+
+  ~~~js
+  methods:{
+     //1.在父组件中定义一个方法（纯业务方法）
+     //2.在子组件内部调用父组件的方法
+     //		在子组件中发布一个自定义事件，通知父组件可以去执行相应操作
+     //3.在父组件使用子组件的标签上订阅子组件内部发布的事件
+     addTodo:function(titleText){
+         titleText = titleText.trim();
+         if(!titleText.length){
+             return;
+         }
+         var  todos = this.todos;
+         todos.push({
+             id:todos[todos.length-1].id>=0?todos[todos.length-1].id+1:1,
+             title:titleText,
+             completed:false
+         });
+
+     }
+  }
+  ~~~
+
+- 2.在子组件中调用父组件的方法（即：在子组件中发布一个自定义事件，通知父组件去执行相应的操作）
+
+  ~~~js
+  methods:{
+      handleKeydown:function(e){
+          var target = e.target;
+          var value = target.value.trim();
+          if(!value.length){
+              return;
+          }
+          //数据准备好了,可以交给父组件使用了。
+          //第一个参数是自定义事件名称
+          //第二个参数是事件参数
+          this.$emit('add',value);
+          e.target.value = '';
+      }
+  }
+  ~~~
+
+- 3.在父组件使用子组件的标签上订阅子组件内部发布的事件
+
+  ~~~html
+  <todo-header v-on:add="addTodo"></todo-header>
+  ~~~
+
+子组件不关心父组件的业务及订阅与否。
+
+
+
+完整代码：
+
+app.js
+
+~~~js
+//采用组件化构建方式
+//一个应用被一个根组件管理起来
+// 根组件中嵌套了子组件
+// 子组件还可以嵌套自己的子子组件
+;(function(){
+	var todos = [
+		{
+			id:1,
+			title:'吃饭',
+			completed:false
+		},{
+			id:2,
+			title:'睡觉',
+			completed:true
+		},{
+			id:3,
+			title:'打豆豆',
+			completed:false
+		}
+	];
+	 window.App = {
+		template:'<div id="app" >' +
+		'<section class="todoapp">' +
+		'<todo-header v-on:add="addTodo" ></todo-header>' +
+		'<todo-list v-bind:todos="todos" ></todo-list>' +
+		'<todo-footer></todo-footer>' +
+		'</section>' +
+		'<app-footer></app-footer>' +
+		'</div>',
+		 /**
+		  * 1.在父组件中通过子组件标签声明属性的方式。
+		  * 	注意：只有v-bind才可以传递动态数据
+		  * 2.在子组件中声明props接收父组件传递给自己的数据
+		  * 3.就可以在子组件中进行使用了（只能使用，不能修改）
+		  * */
+		components:{
+			'todo-header':todoHeader,
+			'todo-list':todoList,
+			'todo-footer':todoFooter,
+			'app-footer':appFooter
+		},
+		 data:function(){
+			 return {
+				 todos:todos
+			 }
+		 },
+		 methods:{
+			 //1.在父组件中定义一个方法（纯业务方法）
+			 //2.在子组件内部调用父组件的方法
+			 //		在子组件中发布一个自定义事件，通知父组件可以去执行相应操作
+			 //3.在父组件使用子组件的标签上订阅子组件内部发布的事件
+			 addTodo:function(titleText){
+				 titleText = titleText.trim();
+				 if(!titleText.length){
+					 return;
+				 }
+				 var  todos = this.todos;
+				 todos.push({
+					 id:todos[todos.length-1].id>=0?todos[todos.length-1].id+1:1,
+					 title:titleText,
+					 completed:false
+				 });
+
+			 }
+		 }
+	};
+})();
+~~~
+
+todo-header.js
+
+~~~js
+;(function(){
+    var temp = '<header class="header">'+
+        '<h1>todos</h1>'+
+        '<input' +
+        '@keydown.enter="handleKeydown" class="new-todo" placeholder="What needs to be done?" autofocus>'+
+        '</header>';
+    window.todoHeader = {
+        template:temp,
+        methods:{
+            handleKeydown:function(e){
+                var target = e.target;
+                var value = target.value.trim();
+                if(!value.length){
+                    return;
+                }
+                //数据准备好了,可以交给父组件使用了。
+                //第一个参数是自定义事件名称
+                //第二个参数是事件参数
+                this.$emit('add',value);
+                e.target.value = '';
+
+            }
+        }
+    }
+})();
+~~~
+
+
+
+#### 非父子组件通信：Event Bus
+
+有时候，非父子关系的两个组件之间也需要通信。在简单的场景下，可以使用一个空的 Vue 实例作为事件总线：
+
+```js
+var bus = new Vue();
+```
+
+```js
+// 触发组件 A 中的事件
+bus.$emit('id-selected', 1);
+```
+
+```js
+ // 在组件 B 创建的钩子中监听事件
+bus.$on('id-selected', function (id) {
+  // ...
+});
+```
+
+
+
+#### 专业组件通信大杀器：Vuex
+
+在复杂的情况下，我们应该考虑使用专门的 [状态管理模式](https://vuex.vuejs.org/zh-cn/)。
 
 
 
@@ -1967,6 +3136,391 @@ computed: {
 
 
 
+
+
+#### 自定义组件实例
+
+~~~html
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="node_modules/vue/dist/vue.min.js"></script>
+    <style>
+        .box{
+            width: 100px;
+            height: 100px;
+            background-color: pink;
+        }
+    </style>
+</head>
+<body>
+
+<!--
+    把type 指定为 text/x-template
+    起一个id
+-->
+<script type="text/x-template" id="hello-world-template">
+    <p>Hello Vue.js</p>
+</script>
+
+<div id="app">
+    <my-component></my-component>
+    <hr/>
+    <my-component></my-component><!--重用组件-->
+</div>
+
+<script>
+
+    //1.先定义（注册）组件
+    //2.使用(相当于扩展html标签)
+//      注意：只能有一个根元素，不能写成template:'<div>My Component</div><h1>Hello vue</h1>'
+    Vue.component('my-component',{
+//        template:'<div>My Component</div>'
+        template:'<div>' +
+        '<div>My Component</div>' +
+        '<h2>{{message}}</h2>' +
+        '<input type="text" v-model="message" >' +
+        '<button @click="showMessage">点击弹出自己的message</button>' +
+        '<input type="checkbox" v-model="seen" >' +
+        '<div v-if="seen" class="box"></div>' +
+        '</div>',
+        data:function(){
+            return {
+                message:'Component Data',
+                seen:true
+            }
+        },
+        methods:{
+            showMessage:function(){
+                window.alert(this.message);//Component Data
+            }
+        }
+    });
+    var app = new Vue({
+        el: '#app',
+        data: {
+            message:'app'
+        },
+        methods: {}
+    });
+</script>
+~~~
+
+![](vue/自定义组件.png)
+
+
+
+#### TodoMVC 进行组件化拆分案例
+
+##### todoHeader.js
+
+~~~js
+/**
+ * Created by ooyhao on 2018/11/24.
+ */
+;(function(){
+
+    var temp = '<header class="header">'+
+        '<h1>todos</h1>'+
+        '<input class="new-todo" placeholder="What needs to be done?" autofocus>'+
+        '</header>';
+
+    window.todoHeader = {
+        template:temp
+    }
+})();
+~~~
+
+
+
+##### todoList.js
+
+~~~js
+/**
+ * Created by ooyhao on 2018/11/24.
+ */
+;(function(){
+    var temp = '<section class="main">'+
+        '<input id="toggle-all" class="toggle-all" type="checkbox">'+
+    '<label for="toggle-all">Mark all as complete</label>'+
+    '<ul class="todo-list">'+
+    '<li class="completed">'+
+        '<div class="view">'+
+            '<input class="toggle" type="checkbox" checked>'+
+                '<label>Taste JavaScript</label>'+
+                '<button class="destroy"></button>'+
+            '</div>'+
+            '<input class="edit" value="Create a TodoMVC template">'+
+            '</li>'+
+            '<li>'+
+                '<div class="view">'+
+                    '<input class="toggle" type="checkbox">'+
+                        '<label>Buy a unicorn</label>'+
+                        '<button class="destroy"></button>'+
+                    '</div>'+
+                    '<input class="edit" value="Rule the web">'+
+                    '</li>'+
+                '</ul>'+
+            '</section>';
+
+    window.todoList = {
+        template:temp
+    }
+})();
+~~~
+
+
+
+##### todoFooter.js
+
+~~~js
+/**
+ * Created by ooyhao on 2018/11/24.
+ */
+;(function(){
+    var temp = '<footer class="footer">'+
+    '<span class="todo-count"><strong>0</strong> item left</span>'+
+    '<ul class="filters">'+
+    '<li>'+
+        '<a class="selected" href="#/">All</a>'+
+    '</li>'+
+    '<li>'+
+    '<a href="#/active">Active</a>'+
+    '</li>'+
+    '<li>'+
+        '<a href="#/completed">Completed</a>'+
+    '</li>'+
+    '</ul>'+
+    '<button class="clear-completed">Clear completed</button>'+
+    '</footer>';
+
+    window.todoFooter = {
+        template:temp
+    }
+
+})();
+~~~
+
+
+
+##### appFooter.js
+
+~~~js
+/**
+ * Created by ooyhao on 2018/11/24.
+ */
+
+;(function(){
+    var temp = '<footer class="info">'+
+        '<p>双击编译一个todo</p>'+
+   ' <p>Template by <a href="http://sindresorhus.com">Sindre Sorhus</a></p>'+
+    '<p>Created by <a href="http://todomvc.com">you</a></p>'+
+    '<p>Part of <a href="http://todomvc.com">TodoMVC</a></p>'+
+    '</footer>';
+
+    window.appFooter = {
+        template:temp
+    }
+
+})();1
+~~~
+
+
+
+##### app.js
+
+~~~js
+//采用组件化构建方式
+//一个应用被一个根组件管理起来
+// 根组件中嵌套了子组件
+// 子组件还可以嵌套自己的子子组件
+;(function(){
+	 window.app = {
+		template:'<div>' +
+		'<section class="todoapp">' +
+		'<todo-header></todo-header>' +
+		'<todo-list></todo-list>' +
+		'<todo-footer></todo-footer>' +
+		'</section>' +
+		'<app-footer></app-footer>' +
+		'</div>',
+		components:{
+			'todo-header':todoHeader,
+			'todo-list':todoList,
+			'todo-footer':todoFooter,
+			'app-footer':appFooter
+		}
+	};
+})();
+
+~~~
+
+
+
+##### main.js（组件启动的入口）
+
+~~~js
+/**
+ * Created by ooyhao on 2018/11/24.
+ */
+
+new Vue({
+    el:'#app',
+    components:{
+        app:app
+    }
+});
+~~~
+
+
+
+##### index.html
+
+~~~html
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Template • TodoMVC</title>
+		<link rel="stylesheet" href="node_modules/todomvc-common/base.css">
+		<link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
+		<!-- CSS overrides - remove if you don't need it -->
+		<link rel="stylesheet" href="css/app.css">
+
+	</head>
+	<body>
+		<div id="app">
+			<!--入口-->
+			<app></app>
+		</div>
+		<script src="node_modules/vue/dist/vue.min.js" ></script>
+		<script src="js/todo-header.js"></script>
+		<script src="js/todo-list.js"></script>
+		<script src="js/todo-footer.js"></script>
+		<script src="js/app-footer.js"></script>
+		<!--<script src="node_modules/todomvc-common/base.js"></script>-->
+		<script src="js/app.js"></script>
+		<script src="main.js"></script>
+	</body>
+</html>
+~~~
+
+![](vue/todomvc组件拆分.png)
+
+上述拆分方法会多嵌套出一层<div></div>
+
+![](vue/div.png)
+
+![](vue/divtodomvc.png)
+
+
+
+~~~html
+<div id="app"></div>
+声明入口节点，告诉Vue把组件渲染到这里，最终实例的template会把入口节点给替换掉
+~~~
+
+![](vue/模块化架构.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### ElementUI
+
+#### 安装
+
+~~~shell
+npm install element-ui -S
+~~~
+
+#### demo
+
+~~~html
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="node_modules/vue/dist/vue.min.js"></script>
+    <link rel="stylesheet" href="node_modules/element-ui/lib/theme-chalk/index.css"/>
+    <script src="node_modules/element-ui/lib/index.js"></script>
+</head>
+<body>
+
+<!--
+    导入Vue，因为是基于vue开发
+    导入Element-ui
+-->
+<div id="app">
+
+    <!--
+        组建的封装就是封装了一个自定义HTML标签
+    -->
+    <el-rate
+            v-model="value"
+            show-text>
+    </el-rate>
+    <button @click="handleClick" >弹出用户评分</button>
+
+    <hr/>
+    <template>
+        <div class="block">
+            <span class="demonstration">默认</span>
+            <el-date-picker
+                    v-model="value1"
+                    type="date"
+                    placeholder="选择日期">
+            </el-date-picker>
+        </div>
+    </template>
+    {{value1}}
+
+</div>
+
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            value: 4,
+            value1: ''
+
+        },
+        methods: {
+            handleClick:function(){
+                window.alert(this.value);
+            }
+        }
+    });
+</script>
+</body>
+</html>
+~~~
+
+![](vue/elementui.png)
 
 
 
