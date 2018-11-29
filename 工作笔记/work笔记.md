@@ -684,7 +684,7 @@ maxDate:'#F{$dp.$D(\'oper_effectiveDate\',
 
 <body>
 	<!--  class="Wdate easyui-validbox" -->
-	<input required="required" id="start_time" class="Wdate easyui-validatebox" ></button><br><br>
+	<input required="required" id="start_time" class="Wdate easyui-validatebox" ><br><br>
 	<input required="required" id="end_time" class="Wdate easyui-validatebox"  /><br><br>
 
 <script type="text/javascript">
@@ -709,7 +709,7 @@ maxDate:'#F{$dp.$D(\'oper_effectiveDate\',
 			maxDate: '#F{$dp.$D(\'start_time\',{d:+31})}',
 			readOnly: true
 		});
-	});
+	});	
 </script>
 </body>
 </html>
