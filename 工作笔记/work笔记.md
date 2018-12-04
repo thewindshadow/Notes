@@ -498,22 +498,22 @@ $("#box").datagrid({
 });
 
 function searchFun() {
-			var treeDept=$("#saleDeptSelect").val();
-			var seleDept=$("#businessDepartmentCode").combobox("getValue");
-			if((treeDept!=null&&treeDept!='')&&(seleDept!=null&&seleDept!='')){
-				$.messager.alert('提示信息','暂不支持营业部门树状和下拉同时筛选，请选择其一！','info');
-				return false;
-			}
-			
-			var customerName = $("#customerName").val();
-			var mobile = $("#mobile").val();
-			if((null == mobile || '' == mobile) && (null==customerName || ''== customerName)){
-				$.messager.alert('提示信息','手机和姓名为必填，请选择其一！','info');
-				return false;
-			}
+    var treeDept=$("#saleDeptSelect").val();
+    var seleDept=$("#businessDepartmentCode").combobox("getValue");
+    if((treeDept!=null&&treeDept!='')&&(seleDept!=null&&seleDept!='')){
+        $.messager.alert('提示信息','暂不支持营业部门树状和下拉同时筛选，请选择其一！','info');
+        return false;
+    }
+
+    var customerName = $("#customerName").val();
+    var mobile = $("#mobile").val();
+    if((null == mobile || '' == mobile) && (null==customerName || ''== customerName)){
+        $.messager.alert('提示信息','手机和姓名为必填，请选择其一！','info');
+        return false;
+    }
 		
 datagrid.datagrid({url:'${app}/app/transWater/transWaterAction_repaymentListByLaw.shtml'});
-			datagrid.datagrid('load',serializeObject($("#searchForm")));
+datagrid.datagrid('load',serializeObject($("#searchForm")));
 ```
 
 #### 9.将字符串转成包装类型/基本类型
