@@ -1,4 +1,4 @@
-HelloWorld
+### RabbitMQ
 
 
 
@@ -6,31 +6,83 @@ HelloWorld
 
 
 
-~~~xml
+~~~java
 生产者：
 1.创建连接工厂
 ConnectionFactory factory = new ConnectionFactory();
+需要设置参数：
+	.setHost(String);
+	.setPort(int);
+	.setUsername(String);
+	.setPassword(String);
+	.setVirtualHost(String);
 2.通过工厂对象创建连接
 Connection connection = factory.newConnection();
 3.通过连接对象创建通道
 Channel channel = connection.createChannel();
 	3.1队列声明
+			/**
+             * 声明队列，如果rabbit中没有此队列将自动创建
+             * param1: 队列名称
+             * param2: 是否持久化
+             * param3: 队列是否独占此连接
+             * param4: 队列不再使用时是否自动删除此队列
+             * param5: 队列参数
+             */
+		.queueDeclare(String,boolean,boolean,boolean,Map);
 	3.2消息发布
+			/**
+             * 消息发布方法
+             * param1: Exchange的名称，如果没有指定名称，则使用 Default Exchange
+             * param2: routingKey，消息的路由Key，用于Exchange（交换机）将消息转发到指定的消息队列
+             * param3: 消息包含的属性
+             * param4: 消息体
+             */
+            /**
+             * 这里没有指定交换机，消息将发送给默认的交换机，每个队列也会绑定那个默认的交换机，
+			*	但是不能
+             * 绑定显示或是解除绑定
+             * 默认的交换机，routingKey等于队列名称
+             */
+		.basicPublish("",QUEUE,null,message.getBytes());
+
 
 消费者：
 1.创建连接工厂
 ConnectionFactory factory = new ConnectionFactory();
+		//设置RabbitMQ所在服务器的ip和端口
+        factory.setHost("127.0.0.1");
+        factory.setPort(5672);
 2.通过工厂对象创建连接
 Connection connection = factory.newConnection();
 3.通过连接对象创建通道
 Channel channel = connection.createChannel();
 	3.1队列声明
 	3.2创建消费方法
+        /**
+         * 消费者接受消息调用此方法
+         * @param consumerTag 消费者的标签，在channel.basicConsume()去指定
+         * @param envelope    消息包的内容，可以从中获取消息id，消息的routingKey，交换机，消息
+         *                      和重传标志（收到消息失败后是否需要重新发送）
+         * @param properties
+         * @param body
+         * @throws IOException
+         */
         DefaultConsumer consumer = new DefaultComsumer(channel){
 			@Override
 			handleDelivery();
         };
 	3.3进行监听
+		/**
+         * 监听消息String queue，boolean autoAck，Consumer callback
+         * 参数明细：
+         * 1.队列名称
+         * 2.是否自动回复，设置为true表示消息接收到自动向mq回复接收到了，
+         *      mq接收到回复消息会删除消息，
+         *      设置为false则需要手动回复
+         * 3.消费消息的方法，消费者接收到消息后调用此方法
+         */
+        channel.basicConsume(QUEUE,true,consumer);
 ~~~
 
 
@@ -51,7 +103,9 @@ Channel channel = connection.createChannel();
 
 
 
+#### 1.HelloWorld
 
+![](RabbitMQ/HelloWorld.png)
 
 
 
@@ -63,7 +117,6 @@ package com.ooyhao.demo;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
@@ -226,6 +279,10 @@ RabbitMQ有以下几种工作模式 ：
 
 
 
+#### 2.work queues
+
+![1544496196859](RabbitMQ/workQueues.png)
+
 1.
 
 work queues与入门程序相比，多了一个消费端，两个消费端共同消费同一个队列中的消息。
@@ -240,7 +297,11 @@ work queues与入门程序相比，多了一个消费端，两个消费端共同
 
 
 
-2.
+![](RabbitMQ\publish-subscribe.png)
+
+
+
+#### 3.publish-subscribe
 
 发布订阅模式：
 1、每个消费者监听自己的队列。
@@ -254,6 +315,932 @@ work queues与入门程序相比，多了一个消费端，两个消费端共同
 声明Exchange_fanout_inform交换机。
 声明两个队列并且绑定到此交换机，绑定时不需要指定routingkey
 发送消息时不需要指定routingkey
+
+~~~java
+public class Producer02_Publish {
+    //队列名称
+    private static final String QUEUE_INFORM_EMAIL = "queue_inform_email";
+    private static final String QUEUE_INFORM_SMS = "queue_inform_sms";
+    private static final String EXCHANGE_FANOUT_INFORM = "exchange_fanout_inform";
+
+    public static void main(String[] args) {
+        Connection connection = null;
+        Channel channel = null;
+        try {
+            //创建一个与MQ的连接
+            ConnectionFactory factory = new ConnectionFactory();
+            factory.setHost("127.0.0.1");
+            factory.setPort(5672);
+            factory.setUsername("guest");
+            factory.setPassword("guest");
+            //rabbitmq默认虚拟机名称为"/",虚拟机相当于一个独立的mq服务器。
+            factory.setVirtualHost("/");
+            //创建一个连接
+            connection = factory.newConnection();
+            //创建与交换机的通道，每个通道代表一个会话
+            channel = connection.createChannel();
+            //声明交换机 String exchange, String type
+            /**
+             * 参数明细：
+             *  1.交换机名称
+             *  2.交换机类型，fanout，topic，direct，headers
+             */
+            channel.exchangeDeclare(EXCHANGE_FANOUT_INFORM,"fanout");
+            //声明队列
+//            （String queue, boolean durable, boolean exclusive, boolean autoDelete,
+//                  Map<String,Object> arguments）
+            /**
+             * 参数明细：
+             *  1、队列名称
+             *  2、是否持久化
+             *  3、是否独占此队列
+             *  4、队列不用是否自动删除
+             *  5、参数
+             */
+            channel.queueDeclare(QUEUE_INFORM_EMAIL,true,
+                    false,false,null);
+            channel.queueDeclare(QUEUE_INFORM_SMS,true,
+                    false,false,null);
+            //交换机和队列绑定String queue, String exchange, String routingKey
+            /**
+             * 参数明细：
+             *  1、队列名称
+             *  2、交换机名称	
+             *  3、路由key
+             */
+            channel.queueBind(QUEUE_INFORM_EMAIL,EXCHANGE_FANOUT_INFORM,"");
+            channel.queueBind(QUEUE_INFORM_SMS,EXCHANGE_FANOUT_INFORM,"");
+            //发送消息
+            for(int i = 0; i < 10; i++){
+                String message = "send info to user"+i;
+                //向交换机发送消息
+                // 交换机发送消息 String exchange,String routingKey,BasicProperties props
+                // byte[] body;
+                /**
+                 * 参数明细
+                 * 1、交换机名称，不指定时使用默认交换机名称Default Exchange
+                 * 2、routingKey(路由key)，根据key名称将消息转发到具体的队列，
+                 *      这里填写队列名称表示消息将发到此队列
+                 * 3、消息属性
+                 * 4、消息内容
+                 */
+
+                channel.basicPublish(EXCHANGE_FANOUT_INFORM,"",null,
+                        message.getBytes());
+                System.out.println("Send Message is:"+message);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            if (channel != null){
+                try {
+                    channel.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (TimeoutException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (connection != null){
+                try {
+                    connection.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+}
+~~~
+
+
+
+**2.消费者**
+
+**subscribe_email**
+
+~~~java
+public class Consumer02_subscribe_email {
+    //队列名称
+    private static final String QUEUE_INFORM_EMAIL = "queue_inform_email";
+    private static final String EXCHANGE_FANOUT_INFORM = "exchange_fanout_inform";
+
+    public static void main(String[] args) throws IOException, TimeoutException {
+        //创建一个与MQ的连接
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("127.0.0.1");
+        factory.setPort(5672);
+        factory.setUsername("guest");
+        factory.setPassword("guest");
+        factory.setVirtualHost("/");
+
+        //创建一个连接
+        Connection connection = factory.newConnection();
+        //创建与交换机的通道，每一个通道代表一个会话
+        Channel channel = connection.createChannel();
+        //声明交换机 String exchange, String type
+        /**
+         * 参数明细：
+         * 1、交换机名称
+         * 2、交换机类型，fanout，topic，direct，headers
+         */
+        channel.exchangeDeclare(EXCHANGE_FANOUT_INFORM, "fanout");
+        //声明队列
+        //channel.queueDeclare(String queue,boolean durable, boolean exclusive,
+        //          boolean autoDelete, Map<String,Object> arguments);
+        /**
+         * 参数明细:
+         * 1、队列名称
+         * 2、是否持久化
+         * 3、是否独占此队列
+         * 4、队列不用是否自动删除
+         * 5、参数
+         */
+        channel.queueDeclare(QUEUE_INFORM_EMAIL, true, false, false, null);
+        //交换机和队列绑定String queue, String exchange, String routingKey
+        /**
+         * 参数明细
+         * 1、队列名称
+         * 2、交换机名称
+         * 3、路由key
+         */
+        channel.queueBind(QUEUE_INFORM_EMAIL,EXCHANGE_FANOUT_INFORM,"");
+        //定义消费方法
+        DefaultConsumer consumer = new DefaultConsumer(channel){
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope,
+                                       AMQP.BasicProperties properties,
+                                       byte[] body) throws IOException {
+                long deliveryTag = envelope.getDeliveryTag();
+                String exchange = envelope.getExchange();
+                //消息内容
+                String message = new String(body,"utf-8");
+                System.out.println(deliveryTag);
+                System.out.println(exchange);
+                System.out.println(message);
+            }
+        };
+        /**
+         * 监听队列String queue, boolean autoAck,Consumer callback
+         * 参数明细
+         * 1、队列名称
+         * 2、是否自动回复，设置为true为表示消息接收到自动向mq回复接收到了，mq接收到回复会删除消息，
+         *  设置为false则需要手动回复
+         * 3、消费消息的方法，消费者接收到消息后调用此方法
+         */
+        channel.basicConsume(QUEUE_INFORM_EMAIL,true,consumer);
+    }
+}
+~~~
+
+**subscribe_sms**
+
+~~~java
+public class Consumer02_subscribe_sms {
+    //队列名称
+    private static final String QUEUE_INFORM_SMS = "queue_inform_sms";
+    private static final String EXCHANGE_FANOUT_INFORM = "exchange_fanout_inform";
+
+    public static void main(String[] args) throws IOException, TimeoutException {
+        //创建一个与MQ的连接
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("127.0.0.1");
+        factory.setPort(5672);
+        factory.setUsername("guest");
+        factory.setPassword("guest");
+        factory.setVirtualHost("/");
+
+        //创建一个连接
+        Connection connection = factory.newConnection();
+        //创建与交换机的通道，每一个通道代表一个会话
+        Channel channel = connection.createChannel();
+        //声明交换机 String exchange, String type
+        /**
+         * 参数明细：
+         * 1、交换机名称
+         * 2、交换机类型，fanout，topic，direct，headers
+         */
+        channel.exchangeDeclare(EXCHANGE_FANOUT_INFORM, "fanout");
+        //声明队列
+        //channel.queueDeclare(String queue,boolean durable, boolean exclusive,
+        //          boolean autoDelete, Map<String,Object> arguments);
+        /**
+         * 参数明细:
+         * 1、队列名称
+         * 2、是否持久化
+         * 3、是否独占此队列
+         * 4、队列不用是否自动删除
+         * 5、参数
+         */
+        channel.queueDeclare(QUEUE_INFORM_SMS, true, false, false, null);
+        //交换机和队列绑定String queue, String exchange, String routingKey
+        /**
+         * 参数明细
+         * 1、队列名称
+         * 2、交换机名称
+         * 3、路由key
+         */
+        channel.queueBind(QUEUE_INFORM_SMS,EXCHANGE_FANOUT_INFORM,"");
+        //定义消费方法
+        DefaultConsumer consumer = new DefaultConsumer(channel){
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope,
+                                       AMQP.BasicProperties properties,
+                                       byte[] body) throws IOException {
+                long deliveryTag = envelope.getDeliveryTag();
+                String exchange = envelope.getExchange();
+                //消息内容
+                String message = new String(body,"utf-8");
+                System.out.println(deliveryTag);
+                System.out.println(exchange);
+                System.out.println(message);
+            }
+        };
+        /**
+         * 监听队列String queue, boolean autoAck,Consumer callback
+         * 参数明细
+         * 1、队列名称
+         * 2、是否自动回复，设置为true为表示消息接收到自动向mq回复接收到了，mq接收到回复会删除消息，
+         *  设置为false则需要手动回复
+         * 3、消费消息的方法，消费者接收到消息后调用此方法
+         */
+        channel.basicConsume(QUEUE_INFORM_SMS,true,consumer);
+    }
+}
+~~~
+
+
+
+##### publish-subscribe和work queues的区别
+
+~~~java
+1、publish/subscribe与work queues有什么区别。
+区别：
+1）work queues不用定义交换机，而publish/subscribe需要定义交换机。
+2）publish/subscribe的生产方是面向交换机发送消息，work queues的生产方是面向队列发送消息(底层使用默
+	认交换机)。
+3）publish/subscribe需要设置队列和交换机的绑定，work queues不需要设置，实质上work queues会将队列绑
+定到默认的交换机 。
+相同点：
+所以两者实现的发布/订阅的效果是一样的，多个消费端监听同一个队列不会重复消费消息。
+ 
+2、实质工作用什么 publish/subscribe还是work queues。
+建议使用 publish/subscribe，发布订阅模式比工作队列模式更强大，并且发布订阅模式可以指定自己专用的交换
+机。
+ 
+~~~
+
+#### 4.Routing
+
+路由模式：
+
+1.每个消费者监听自己的队列，并且设置routingKey。
+
+2.生产者将消息发送给交换机，交换机根据routingKey来转发消息到指定的列
+
+
+
+![1544511437000](RabbitMQ\routing_key.png)
+
+
+
+**代码**
+
+1.**生产者**
+
+声明exchange_routing_inform交换机
+
+声明两个队列并且绑定到此交换机，绑定时需要指定routingKey
+
+发送消息时需要指定routingKey。
+
+~~~java
+public class Producer03_routing {
+    //声明Exchange
+    private static final String EXCHANGE_ROUTING_INFORM = "exchange_routing_inform";
+    //声明Queue
+    private static final String QUEUE_INFORM_EMAIL = "queue_routing_email";
+
+    private static final String QUEUE_INFORM_SMS = "queue_routing_sms";
+    //声明RoutingKey
+    private static final String ROUTING_KEY_EMAIL = "routing_key_email";
+
+    private static final String ROUTING_KEY_SMS = "routing_key_sms";
+
+    public static void main(String[] args) {
+
+        //1.创建ConnectionFactory
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("127.0.0.1");
+        factory.setPort(5672);
+        factory.setUsername("guest");
+        factory.setPassword("guest");
+        factory.setVirtualHost("/");
+        Connection connection = null;
+        Channel channel = null;
+        try{
+            //2.通过ConnectionFactory创建Connection
+            connection = factory.newConnection();
+            //3.通过Connection创建Channel
+            channel = connection.createChannel();
+            //4.通过Channel声明交换机
+
+            channel.exchangeDeclare(EXCHANGE_ROUTING_INFORM,"direct");
+            //5.通过Channel声明队列
+            channel.queueDeclare(QUEUE_INFORM_EMAIL,true,false,false,null);
+            channel.queueDeclare(QUEUE_INFORM_SMS,true,false,false,null);
+
+            //6.绑定队列
+            channel.queueBind(QUEUE_INFORM_EMAIL,EXCHANGE_ROUTING_INFORM,ROUTING_KEY_EMAIL);
+            channel.queueBind(QUEUE_INFORM_SMS,EXCHANGE_ROUTING_INFORM,ROUTING_KEY_SMS);
+
+
+            //7.发送消息
+            for (int i = 0; i < 10; i++) {
+                String message = "email inform to user"+i;
+                channel.basicPublish(EXCHANGE_ROUTING_INFORM,ROUTING_KEY_EMAIL,
+                        null,message.getBytes());
+                System.out.println("email send message is "+message);
+            }
+
+            //发送消息
+            for (int i = 0; i < 10; i++) {
+                String message = "sms inform to user"+i;
+                channel.basicPublish(EXCHANGE_ROUTING_INFORM,ROUTING_KEY_SMS,
+                        null,message.getBytes());
+                System.out.println("sms send message is "+message);
+            }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            if(channel != null){
+                try {
+                    channel.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (TimeoutException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (connection != null){
+                try {
+                    connection.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+}
+~~~
+
+
+
+消费者**Consumer_email**
+
+~~~java
+public class Customer03_routing_email {
+
+    //声明Exchange
+    private static final String EXCHANGE_ROUTING_INFORM = "exchange_routing_inform";
+
+    //声明Queue
+    private static final String QUEUE_INFORM_EMAIL = "queue_routing_email";
+
+    //声明RoutingKey
+    private static final String ROUTING_KEY_EMAIL = "routing_key_email";
+
+    public static void main(String[] args) throws IOException, TimeoutException {
+        //1.创建ConnectionFactory
+        ConnectionFactory factory = new ConnectionFactory();
+        //1.1为ConnectionFactory设置相关参数
+        factory.setHost("127.0.0.1");
+        factory.setPort(5672);
+        //2.通过ConnectionFactory创建Connection
+        Connection connection = factory.newConnection();
+        //3.通过Connection创建Channel
+        Channel channel = connection.createChannel();
+        /**
+         * 参数明细：
+         *  1、交换机名称
+         *  2、交换机类型，fanout，topic，direct，headers
+         */
+        //4.通过Channel声明Exchange(参数：交换机名字，交换机类型)
+        channel.exchangeDeclare(EXCHANGE_ROUTING_INFORM, "direct");
+
+        /**
+         * 参数明细：
+         *  1、队列名称
+         *  2、是否持久化
+         *  3、是否独占此队列
+         *  4、队列不用时候自动删除
+         *  5、参数
+         */
+        //5.通过Channel声明Queue
+        channel.queueDeclare(QUEUE_INFORM_EMAIL, true,
+                false, false, null);
+
+        //6.queueBind，队列绑定
+        /**
+         * 参数明细：
+         *  1、队列名称
+         *  2、交换机名称
+         *  3、路由key
+         */
+        channel.queueBind(QUEUE_INFORM_EMAIL,
+                EXCHANGE_ROUTING_INFORM,ROUTING_KEY_EMAIL);
+
+        //创建消费方法,并且重写handleDelivery方法
+        DefaultConsumer consumer = new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag,
+                                       Envelope envelope,
+                                       AMQP.BasicProperties properties, byte[] body)
+                    throws IOException {
+                String routingKey = envelope.getRoutingKey();
+                String exchange = envelope.getExchange();
+                String message = new String(body, "utf-8");
+                System.out.println(exchange);
+                System.out.println(routingKey);
+                System.out.println(message);
+                System.out.println("---------------------");
+            }
+        };
+
+        /**
+         * 监听队列String queue,boolean autoAck,Consumer consumer
+         * 参数明细：
+         *  1.队列名称
+         *  2.是否自动回复，设置为true为表示消息接收到自动向mq回复已经接收到信息，
+         *      mq接收到回复会删除这条信息，设置为false则需要手动回复。
+         *  3.消费方法
+         */
+        channel.basicConsume(QUEUE_INFORM_EMAIL,true, consumer);
+    }
+}
+~~~
+
+
+
+消费者**Consumer_sms**
+
+~~~java
+public class Customer03_routing_sms {
+
+    //声明Exchange
+    private static final String EXCHANGE_ROUTING_INFORM = "exchange_routing_inform";
+
+    //声明Queue
+    private static final String QUEUE_INFORM_SMS = "queue_routing_sms";
+
+    //声明RoutingKey
+    private static final String ROUTING_KEY_SMS = "routing_key_sms";
+
+    public static void main(String[] args) throws IOException, TimeoutException {
+        //1.创建ConnectionFactory
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("127.0.0.1");
+        factory.setPort(5672);
+        //2.通过ConnectionFactory来创建Connection
+        Connection connection = factory.newConnection();
+        //3.通过Connection创建Channel
+        Channel channel = connection.createChannel();
+        //4.通过Channel声明Exchange
+        /**
+         * 参数：
+         * 1.exchange name
+         * 2.exchange type
+         */
+        channel.exchangeDeclare(EXCHANGE_ROUTING_INFORM,"direct");
+        //5.通过Channel声明Queue
+        /**
+         * 参数：
+         * 1.queue name
+         * 2.是否需要持久化
+         * 3.是否独占连接
+         * 4.auto delete
+         * 5.args
+         */
+        channel.queueDeclare(QUEUE_INFORM_SMS,true,false,false,null);
+        //6.通过Channel绑定Queue
+        /**
+         * 参数：
+         * 1.queue name
+         * 2.exchange name
+         * 3.routing key
+         */
+        channel.queueBind(QUEUE_INFORM_SMS,EXCHANGE_ROUTING_INFORM,ROUTING_KEY_SMS);
+        //7.创建Consumer
+        DefaultConsumer consumer = new DefaultConsumer(channel){
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope,
+                                       AMQP.BasicProperties properties,
+                                       byte[] body) throws IOException {
+                String routingKey = envelope.getRoutingKey();
+                String exchange = envelope.getExchange();
+                String message = new String(body,"utf-8");
+                System.out.println(exchange);
+                System.out.println(routingKey);
+                System.out.println(message);
+                System.out.println("---------------");
+            }
+        };
+        //8.监听
+        /**
+         * 参数：
+         * 1、queue name
+         * 2、auto ack
+         * 3、consumer
+         */
+        channel.basicConsume(QUEUE_INFORM_SMS,true,consumer);
+    }
+}
+~~~
+
+publish-subscribe 与 Routing 区别
+
+~~~xml
+使用publish-subscribe时，是不用指定Routing_Key，将一条消息（不指定Routing_key）发布到Exchange，
+Exchange就会将数据复制成N分，然后发送到每一个Queue中。
+
+使用Routing时，需要指定Routing_key，将指定了Routing_key的消息根据Routing_key发布到指定的Queue上。
+~~~
+
+
+
+#### 5.Topic
+
+
+
+![1544518378550](RabbitMQ/topic.png)
+
+路由模式：
+
+1、每个消费者监听自己的队列，并且设置带通配符的Routing_key
+
+2、生成者将消息发送给broker，由交换机根据routing_key来转发这些消息到指定的队列。
+
+代码：
+
+案例：
+根据用户的通知设置去通知用户，设置接收Email的用户只接收Email，设置接收sms的用户只接收sms，设置两种
+通知类型都接收的则两种通知都有效。
+1、**生产者**
+声明交换机，指定topic类型：
+
+~~~java
+  /**
+ * 声明交换机
+ * param1：交换机名称
+ * param2:交换机类型 四种交换机类型：direct、fanout、topic、headers
+ */
+ channel.exchangeDeclare(EXCHANGE_TOPICS_INFORM, BuiltinExchangeType.TOPIC);
+//Email通知
+channel.basicPublish(EXCHANGE_TOPICS_INFORM, "inform.email", null, message.getBytes());
+//sms通知
+channel.basicPublish(EXCHANGE_TOPICS_INFORM, "inform.sms", null, message.getBytes());
+//两种都通知
+channel.basicPublish(EXCHANGE_TOPICS_INFORM, "inform.sms.email", null, message.getBytes());
+~~~
+
+完整代码：
+
+**Producer_topic**
+
+~~~java
+public class Producer04_topic {
+
+    //exchange name
+    private static final String EXCHANGE_TOPIC = "exchange_topic";
+
+    //queue name
+    private static final String QUEUE_TOPIC_EMAIL = "queue_topic_email";
+    private static final String QUEUE_TOPIC_SMS = "queue_topic_sms";
+
+    //routing key
+    private static final String ROUTING_KEY_EMAIL = "topic.email";
+    private static final String ROUTING_KEY_SMS = "topic.sms";
+    private static final String ROUTING_KEY_SMS_EMAIL = "topic.sms.email";
+
+    public static void main(String[] args) {
+
+        //1.创建ConnectionFactory
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("127.0.0.1");
+        factory.setPort(5672);
+        factory.setUsername("guest");
+        factory.setPassword("guest");
+        factory.setVirtualHost("/");
+        Connection connection = null;
+        Channel channel = null;
+        try{
+            //2.通过ConnectionFactory创建Connection
+            connection = factory.newConnection();
+            //3.通过Connection创建Channel
+            channel = connection.createChannel();
+            //4.通过Channel声明Exchange
+            /**
+             * 参数：exchangeName exchangeType
+             */
+            channel.exchangeDeclare(EXCHANGE_TOPIC,"topic");
+            //5.通过Channel声明Queue
+            /**
+             * 参数：queueName,持久化，单独占用连接，不用时自动删除（autoDelete），args
+             */
+            channel.queueDeclare(QUEUE_TOPIC_EMAIL,true,false,
+                    false,null);
+            channel.queueDeclare(QUEUE_TOPIC_SMS,true,false,
+                    false,null);
+            //6.通过Channel绑定Queue
+            /**
+             * 参数：queueName,exchangeName,routingKey
+             */
+            channel.queueBind(QUEUE_TOPIC_EMAIL,EXCHANGE_TOPIC,ROUTING_KEY_EMAIL);
+            channel.queueBind(QUEUE_TOPIC_SMS,EXCHANGE_TOPIC,ROUTING_KEY_SMS);
+            //7.通过Channel发布信息
+            for (int i = 0; i < 10; i++) {
+                String message = "routing_key_email:"+i;
+                channel.basicPublish(EXCHANGE_TOPIC,ROUTING_KEY_EMAIL,
+                        null,message.getBytes());
+                System.out.println("send message by routing_key_email:"+message);
+            }
+            for (int i = 0; i < 10; i++) {
+                String message = "routing_key_sms:"+i;
+                channel.basicPublish(EXCHANGE_TOPIC,ROUTING_KEY_SMS,
+                        null,message.getBytes());
+                System.out.println("send message by routing_key_sms:"+message);
+            }
+            for (int i = 0; i < 10; i++) {
+                String message = "routing_key_sms_email:"+i;
+                channel.basicPublish(EXCHANGE_TOPIC,ROUTING_KEY_SMS_EMAIL,
+                        null,message.getBytes());
+                System.out.println("send message by routing_key_sms_email:"+message);
+            }
+            //8.释放资源
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            if (channel != null){
+                try {
+                    channel.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (TimeoutException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (connection != null){
+                try {
+                    connection.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+}
+~~~
+
+
+
+
+
+2、**消费端**
+
+队列绑定交换机指定通配符：
+统配符规则：
+中间以“.”分隔。
+符号#可以匹配多个词，符号*可以匹配一个词语。
+
+~~~java
+//声明队列
+channel.queueDeclare(QUEUE_INFORM_EMAIL, true, false, false, null);
+channel.queueDeclare(QUEUE_INFORM_SMS, true, false, false, null);
+//声明交换机
+channel.exchangeDeclare(EXCHANGE_TOPICS_INFORM, BuiltinExchangeType.TOPIC);
+//绑定email通知队列
+channel.queueBind(QUEUE_INFORM_EMAIL,EXCHANGE_TOPICS_INFORM,"inform.#.email.#");
+//绑定sms通知队列
+ channel.queueBind(QUEUE_INFORM_SMS,EXCHANGE_TOPICS_INFORM,"inform.#.sms.#");
+~~~
+
+完整代码：
+
+**topic_email**
+
+~~~java
+public class Consumer04_topic_email {
+
+    //exchange name
+    private static final String EXCHANGE_TOPIC = "exchange_topic";
+
+    //queue name
+    private static final String QUEUE_TOPIC_EMAIL = "queue_topic_email";
+
+    //routing key
+    private static final String ROUTING_KEY_EMAIL = "topic.#.email.#";
+
+    public static void main(String[] args) throws IOException, TimeoutException {
+
+        //1.创建ConnectionFactory
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("127.0.0.1");
+        factory.setPort(5672);
+        Connection connection = null;
+        Channel channel = null;
+        //2.通过ConnectionFactory创建Connection
+        connection = factory.newConnection();
+        //3.通过Connection创建Channel
+        channel = connection.createChannel();
+        //4.通过Channel声明Exchange
+        /**
+         * 参数：exchangeName,exchangeType
+         */
+        channel.exchangeDeclare(EXCHANGE_TOPIC, "topic");
+        //5.通过Channel声明Queue
+        /**
+         * 参数：queueName,是否持久化，是否独占连接，不用时自动删除，参数
+         */
+        channel.queueDeclare(QUEUE_TOPIC_EMAIL, true,
+                false, false, null);
+        //6.通过Channel绑定Queue
+        /**
+         * 参数：queueName,exchangeName,routingKey
+         */
+        channel.queueBind(QUEUE_TOPIC_EMAIL, EXCHANGE_TOPIC, ROUTING_KEY_EMAIL);
+        //7.定义Consumer
+        DefaultConsumer consumer = new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope,
+                                       AMQP.BasicProperties properties,
+                                       byte[] body) throws IOException {
+                String exchange = envelope.getExchange();
+                String routingKey = envelope.getRoutingKey();
+                String message = new String(body, "utf-8");
+
+                System.out.println(exchange);
+                System.out.println(routingKey);
+                System.out.println(message);
+                System.out.println("-------------------");
+            }
+        };
+        //8.通过Channel监听MQ
+        /**
+         * 参数：queueName,autoAck,consumer
+         */
+        channel.basicConsume(QUEUE_TOPIC_EMAIL, true, consumer);
+
+    }
+}
+
+~~~
+
+
+
+**topic_sms**
+
+~~~java
+public class Consumer04_topic_sms {
+
+    //exchange name
+    private static final String EXCHANGE_TOPIC = "exchange_topic";
+
+    //queue name
+    private static final String QUEUE_TOPIC_SMS = "queue_topic_sms";
+
+    //routing key
+    private static final String ROUTING_KEY_SMS = "topic.#.sms.#";
+
+    public static void main(String[] args) throws IOException, TimeoutException {
+
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("127.0.0.1");
+        factory.setPort(5672);
+        Connection connection = null;
+        Channel channel = null;
+
+        connection = factory.newConnection();
+        channel = connection.createChannel();
+        channel.exchangeDeclare(EXCHANGE_TOPIC, "topic");
+        channel.queueDeclare(QUEUE_TOPIC_SMS, true, false, false, null);
+        channel.queueBind(QUEUE_TOPIC_SMS, EXCHANGE_TOPIC, ROUTING_KEY_SMS);
+
+        DefaultConsumer consumer = new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope,
+                                       AMQP.BasicProperties properties,
+                                       byte[] body) throws IOException {
+                String exchange = envelope.getExchange();
+                String routingKey = envelope.getRoutingKey();
+                String message = new String(body, "utf-8");
+
+                System.out.println(exchange);
+                System.out.println(routingKey);
+                System.out.println(message);
+                System.out.println("-------------");
+            }
+
+        };
+        channel.basicConsume(QUEUE_TOPIC_SMS, true, consumer);
+    }
+
+}
+
+~~~
+
+
+
+4.4.4思考  
+1、本案例的需求使用Routing工作模式能否实现？
+使用Routing模式也可以实现本案例，共设置三个 routingkey，分别是email、sms、all，email队列绑定email和
+all，sms队列绑定sms和all，这样就可以实现上边案例的功能，实现过程比topics复杂。
+Topic模式更多加强大，它可以实现Routing、publish/subscirbe模式的功能。
+
+
+
+Routing 与 Topic的区别
+
+~~~xml
+使用Routing模式时，生产者生产信息是带有特殊的rountingKey,一条消息只会发送到一个Queue中，消费者通过唯
+一的routingKey来监听指定的Queue
+
+使用Topic模式时，生产者生产消息时带有通用的routingKey，一条信息可以发送到符合条件的Queue中，消费者通过配置带有#通配符的routingKey来监听满足条件的Queue。
+~~~
+
+
+
+#### 6.header
+
+~~~xml
+Headers类型的Exchanges是不处理路由键的，而是根据发送的消息内容中的headers属性进行匹配。在绑定Queue与
+Exchange时指定一组键值对；当消息发送到RabbitMQ时会取到该消息的headers与Exchange绑定时指定的键值对
+进行匹配；如果完全匹配则消息会路由到该队列，否则不会路由到该队列。headers属性是一个键值对，可以是
+Hashtable，键值对的值可以是任何类型，而fanout，direct，topic的路由必须都需要字符串形式的。
+
+匹配规则x-match有下列两种类型：
+x-match=all:表示所有的键值对都可匹配才可以接收到消息。
+x-match=any:表示只有有键值对匹配就可以接收到到消息。
+~~~
+
+
+
+
+
+
+
+header模式与routing不同的地方在于，header模式取消routingkey，使用header中的 key/value（键值对）匹配
+队列。
+案例：
+根据用户的通知设置去通知用户，设置接收Email的用户只接收Email，设置接收sms的用户只接收sms，设置两种
+通知类型都接收的则两种通知都有效。
+代码：
+1）生产者
+队列与交换机绑定的代码与之前不同，如下：
+
+~~~java
+Map<String, Object> headers_email = new Hashtable<String, Object>();
+headers_email.put("inform_type", "email");
+Map<String, Object> headers_sms = new Hashtable<String, Object>();
+headers_sms.put("inform_type", "sms");
+channel.queueBind(QUEUE_INFORM_EMAIL,EXCHANGE_HEADERS_INFORM,"",headers_email);
+channel.queueBind(QUEUE_INFORM_SMS,EXCHANGE_HEADERS_INFORM,"",headers_sms);
+~~~
+
+
+
+
+
+通知：
+
+~~~java
+String message = "email inform to user"+i;
+Map<String,Object> headers =  new Hashtable<String, Object>();
+headers.put("inform_type", "email");//匹配email通知消费者绑定的header
+//headers.put("inform_type", "sms");//匹配sms通知消费者绑定的header
+AMQP.BasicProperties.Builder properties = new AMQP.BasicProperties.Builder();
+properties.headers(headers);
+//Email通知
+channel.basicPublish(EXCHANGE_HEADERS_INFORM, "", properties.build(), message.getBytes());
+
+~~~
+
+
+
+消费者：
+
+~~~java
+channel.exchangeDeclare(EXCHANGE_HEADERS_INFORM, BuiltinExchangeType.HEADERS);
+Map<String, Object> headers_email = new Hashtable<String, Object>();
+headers_email.put("inform_email", "email");
+//交换机和队列绑定
+channel.queueBind(QUEUE_INFORM_EMAIL,EXCHANGE_HEADERS_INFORM,"",headers_email);
+//指定消费队列
+channel.basicConsume(QUEUE_INFORM_EMAIL, true, consumer);
+ 
+~~~
+
+
 
 
 
