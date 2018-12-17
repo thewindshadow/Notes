@@ -600,7 +600,7 @@ public class Consumer02_subscribe_sms {
 
 
 
-![1544511437000](RabbitMQ\routing_key.png)
+![1544511437000](RabbitMQ/routing_key.png)
 
 
 
