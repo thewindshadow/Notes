@@ -786,5 +786,23 @@ $.messager.progress('close');
 
 
 
+#### 21.使用List与Set的构造方法进行数据去重
+
+~~~java
+ @Test
+public void test1(){
+    List<String> list = new ArrayList<String>();
+    list.add("123");
+    list.add("456");
+    list.add("789");
+    list.add("123");
+
+    list = new ArrayList<String>(new HashSet<String>(list));
+    System.out.println(list);
+}
+~~~
+
+
+
 
 
