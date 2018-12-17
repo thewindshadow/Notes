@@ -1170,7 +1170,7 @@ Routing 与 Topic的区别
 
 
 
-#### 6.header
+#### 6.headers
 
 ~~~xml
 Headers类型的Exchanges是不处理路由键的，而是根据发送的消息内容中的headers属性进行匹配。在绑定Queue与
@@ -1242,7 +1242,14 @@ channel.basicConsume(QUEUE_INFORM_EMAIL, true, consumer);
 
 
 
+7.RPC
 
+RPC即客户端远程调用服务端的方法 ，使用MQ可以实现RPC的异步调用，基于Direct交换机实现，流程如下：
+
+- 1、客户端即是生产者就是消费者，向RPC请求队列发送RPC调用消息，同时监听RPC响应队列。
+- 2、服务端监听RPC请求队列的消息，收到消息后执行服务端的方法，得到方法返回的结果
+- 3、服务端将RPC方法 的结果发送到RPC响应队列
+- 4、客户端（RPC调用方）监听RPC响应队列，接收到RPC调用结果。
 
 
 
