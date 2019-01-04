@@ -2,7 +2,7 @@
 
 #### 1.DEV 和 TEST 异常
 
-![异常](./pic_work/exception.png)
+![异常](pic_work/exception.png)
 
 
 
@@ -15,7 +15,7 @@ vm options里面输入
 	-server -XX:PermSize=1024M -XX:MaxPermSize=1024m
 ```
 
-![1531444627908](.\pic_work\1531444627908.png)
+![1531444627908](pic_work/1531444627908.png)
 
 
 
@@ -30,19 +30,19 @@ address = address.replaceAll(reg, "");
 
 #### 4.从SVN或Git上拉项目
 
-![1531453164107](.\pic_work\1531453164107.png)
+![1531453164107](pic_work/1531453164107.png)
 
 
 
 #### 5.从SVN更新，提交项目
 
-![1531963442840](.\pic_work\1531963516444.png)
+![1531963442840](pic_work/1531963516444.png)
 
 #### 6.从Git上更新，提交项目
 
-![1532074164481](.\pic_work\1532074164481.png)
+![1532074164481](pic_work/1532074164481.png)
 
-![1532074279252](.\pic_work\1532074279252.png)
+![1532074279252](pic_work/1532074279252.png)
 
 
 
@@ -54,7 +54,7 @@ address = address.replaceAll(reg, "");
 
    下图为我自己添加过滤的内容，例如：*.iml;*.idea;*.gitignore;*.sh;*.classpath;*.project;*.settings;target; 
 
-   ![1531908374016](.\pic_work\1531908374016.png)
+   ![1531908374016](pic_work/1531908374016.png)
 
 #### 8.IDEA 快捷键
 
@@ -77,13 +77,13 @@ ctrl + F9  编译项目
 
 #### 9.如何查看tomcat 运行时的报错信息
 
-![2018-07-26_173532](.\pic_work\2018-07-26_173532.png)
+![2018-07-26_173532](/pic_work/2018-07-26_173532.png)
 
 #### 10.自动生成代码时遇到的问题
 
 
 
-![2018-08-02_105119](E:\工作资料\笔记\pic_work\2018-08-02_105119.png)
+![2018-08-02_105119](pic_work/2018-08-02_105119.png)
 
 ![2018-08-02_105839](E:\工作资料\笔记\pic_work\2018-08-02_105839.png)
 
@@ -804,5 +804,10 @@ public void test1(){
 
 
 
+#### 21.jpa遇到的 org.hibernate.PersistentObjectException: detached entity passed to persist异常
 
+![](pic_work/persist的异常.png)
 
+　**发生这个原因是因为我们已经在实体类用JPA注解指定了主键的生成策略主键就不能设置了，一旦不为空或者0就被认为是已经保存到了数据库中，一旦调用persist()方法就会抛出上面的异常** 
+
+![img](pic_work/jpa异常.png) 
