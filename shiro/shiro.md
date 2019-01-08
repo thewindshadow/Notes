@@ -92,3 +92,140 @@
 
 
 
+## 4.MD5加密
+
+~~~java
+@Test
+public void testMD5(){
+    //密码：明文
+    String password = "666";
+  
+    //密文
+    Md5Hash md5Hash = new Md5Hash(password);
+    //fae0b27c451c728867a567e8c1bb4e53
+    System.out.println(md5Hash);
+
+    md5Hash = new Md5Hash(password,"zhangsan");
+    //2f1f526e25fdefa341c7a302b47dd9df
+    System.out.println(md5Hash);
+
+    md5Hash = new Md5Hash(password,"zhangsan",3);
+    //cd757bae8bd31da92c6b14c235668091
+    System.out.println(md5Hash);
+}
+~~~
+
+
+
+## 5.使用ini方式判断是否有角色
+
+ini配置文件：
+
+~~~ini
+[users]
+#用户zhangsan的密码是123，此用户具有role1和role2两个角色
+zhangsan=666,role1,role2
+lisi=888,role2
+
+[roles]
+#角色role1对资源user拥有create，update权限
+role1=user:create,user:update
+#角色role2对资源user拥有create，delete权限
+role2=user:create,user:delete
+#角色role3对资源user拥有create权限
+role3=user:create
+~~~
+
+
+
+~~~JAVA
+@Test
+public void testHasRole(){
+    Factory<SecurityManager> factory =
+            new IniSecurityManagerFactory("classpath:shiro-permission.ini");
+    SecurityManager securityManager = factory.getInstance();
+
+    SecurityUtils.setSecurityManager(securityManager);
+
+    Subject subject = SecurityUtils.getSubject();
+
+    UsernamePasswordToken token = new UsernamePasswordToken("zhangsan","666");
+
+    subject.login(token);
+    //进行授权操作时的前提：用户必须通过验证
+
+    //判断当前用户是否拥有某个角色：返回true表示拥有，false表示没有
+    System.out.println(subject.hasRole("role1"));
+    //判断当前用户是否拥有一些角色：返回true表示全部拥有，false表示不全部拥有
+    System.out.println(subject.hasAllRoles(Arrays.asList("role1","role2","role3")));
+    //判断当前用户是否拥有一些角色：返回是boolean类型的数据，true表示拥有某个角色，false表示没有。
+    System.out.println(Arrays.toString(subject.hasRoles(Arrays.asList("role1","role2","role3"))));
+    //判断当前用户是否拥有某个角色：没有返回值，如果拥有，不做任何操作，没有报异常UnauthorizedException
+    subject.checkRoles("role1");
+    //判断当前用户是否拥有一些角色
+    //org.apache.shiro.authz.UnauthorizedException: Subject does not have role [role3
+    subject.checkRoles(Arrays.asList("role1","role2","role3"));
+
+}
+~~~
+
+
+
+## 6.使用ini方式判断是否有权限
+
+~~~ini
+[users]
+#用户zhangsan的密码是123，此用户具有role1和role2两个角色
+zhangsan=666,role1,role2
+lisi=888,role2
+
+[roles]
+#角色role1对资源user拥有create，update权限
+role1=user:create,user:update
+#角色role2对资源user拥有create，delete权限
+role2=user:create,user:delete
+#角色role3对资源user拥有create权限
+role3=user:create
+~~~
+
+
+
+~~~java
+
+@Test
+public void testHasPermission(){
+    Factory<SecurityManager> factory =
+            new IniSecurityManagerFactory("classpath:shiro-permission.ini");
+    SecurityManager securityManager = factory.getInstance();
+    SecurityUtils.setSecurityManager(securityManager);
+    Subject subject = SecurityUtils.getSubject();
+    UsernamePasswordToken token =
+            new UsernamePasswordToken("zhangsan","666");
+    subject.login(token);
+
+    System.out.println(subject.isPermitted("user:delete"));
+    System.out.println(subject.isPermittedAll("user:list","user:delete"));
+    System.out.println(Arrays.toString(subject.isPermitted("user:list","user:delete")));
+    //org.apache.shiro.authz.UnauthorizedException: Subject does not have permission [user:list]
+    subject.checkPermission("user:list");
+}
+~~~
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
