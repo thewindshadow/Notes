@@ -563,9 +563,10 @@ select group_concat(reason_value separator ',') from fms_return_reason_info ;
 退货退款类型,仓库,仓库-破损,仓库-错发,仓库-少/漏发,延迟发货,产品,产品残次（内件短少/瑕疵）
 ~~~
 
-#### 14，时间往前后推
+#### 14，时间问题
 
 ~~~java
+// java 代码
 if(paginationCondition.getCondition().getCreateTime()!=null&&paginationCondition.getCondition().getModifyTime() != null){
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -579,6 +580,7 @@ if(paginationCondition.getCondition().getCreateTime()!=null&&paginationCondition
     whereSql.append(" and  a.create_time>='"+startTime+"'");
     whereSql.append(" and  a.create_time<='"+endTime+"'");
 }
+
 ~~~
 
 #### 15.下拉框
@@ -753,6 +755,30 @@ $("#start_time").click(function () {
             readOnly: true
         });
     });
+
+
+
+
+<script>
+    var date = new Date();
+    var year = date.getFullYear();
+    var month = date.getMonth();
+    var day = date.getDate();
+    date.setMonth(month-1);
+    date.setDate(day+1);
+    console.log(date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate());
+
+
+    var date1 = new Date();
+    var iMonth = date1.getMonth()+1;
+    var iDay = date1.getDate()+1;
+    date1.setMonth(iMonth);
+    date1.setDate(iDay);
+    console.log(date1.getFullYear()+"-"+date1.getMonth()+"-"+date1.getDate());
+
+    起始时间：当前时间的前一个月加1天       CurrentTime - 1Month + 1Day
+    结束时间：当前时间的加1天			  CurrentTime + 1Day
+</script>
 ~~~
 
 #### 19.判断指定单选框是否被选中
@@ -811,3 +837,22 @@ public void test1(){
 　**发生这个原因是因为我们已经在实体类用JPA注解指定了主键的生成策略主键就不能设置了，一旦不为空或者0就被认为是已经保存到了数据库中，一旦调用persist()方法就会抛出上面的异常** 
 
 ![img](pic_work/jpa异常.png) 
+
+
+
+
+
+#### 22.店铺下拉提供模糊从查询
+
+~~~js
+// 店铺下拉
+jary.combobox("shopId",{
+       url:'getSysCommonLibDropDownData?paramsval=shop_info_name|Y|1|',
+       editable:true,
+       filter: function(q, row){
+            var opts = $(this).combobox('options');
+            return row[opts.textField].indexOf(q.trim()) > -1;
+        }
+});
+~~~
+
