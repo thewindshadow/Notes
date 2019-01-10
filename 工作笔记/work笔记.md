@@ -856,3 +856,17 @@ jary.combobox("shopId",{
 });
 ~~~
 
+
+
+#### 23.未找到数据库
+
+#### （Cannot create PoolableConnectionFactory）
+
+~~~java
+查看
+D:\work\apache-tomcat-7.0.54\apache-tomcat-7.0.54\conf 中的Context.xml文件中的配置。
+
+~~~
+
+![1547108341121](pic_work/DataSource.png)
+
